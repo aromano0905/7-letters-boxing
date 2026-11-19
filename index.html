@@ -340,7 +340,7 @@ function makeRoom(){const me={peer:'me-'+Math.random().toString(36).slice(2),sam
     leave(){try{R._conn&&R._conn.close()}catch(e){}try{R._peer&&R._peer.destroy()}catch(e){}R._conn=null;other=null;return Promise.resolve()}};
   return R}
 
-window.FIREBASE_CONFIG=null;
+window.FIREBASE_CONFIG={"apiKey": "AIzaSyBVWugSgRC5bNpRpsoUJow7b2SZGi9sbvA", "authDomain": "letters-boxing.firebaseapp.com", "projectId": "letters-boxing", "storageBucket": "letters-boxing.firebasestorage.app", "messagingSenderId": "692812657896", "appId": "1:692812657896:web:590a7d84521c42790a455d"};
 
 (()=>{
 'use strict';
