@@ -129,6 +129,8 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
 .r-epic{background:linear-gradient(170deg,#d39bff,#9b4de6 50%,#55209c)}
 .r-rare{background:linear-gradient(170deg,#5aa6f0,#2856b8 60%,#15296a)}
 .r-uncommon{background:linear-gradient(170deg,#9be36b,#3fa83a 55%,#1d6420)}
+.r-random{background:linear-gradient(170deg,#3a3f4a,#20232b 60%,#121419);border:2px dashed rgba(255,255,255,.35)}
+.card .rq{display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:64px;color:#fff;background:rgba(255,255,255,.08)}
 .r-common{background:linear-gradient(170deg,#c4c8cc,#8a9096 60%,#4e5358)}
 .r-mythic::after,.r-magnolia-mythic::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.42) 45%,transparent 60%);background-size:250% 100%;animation:shine 3.4s linear infinite;pointer-events:none}
 @keyframes shine{from{background-position:150% 0}to{background-position:-100% 0}}
@@ -221,14 +223,14 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
   <div class="wrap">
     <div class="title"><h1>7 Letters<br>Boxing</h1><p class="who"><span id="acctRow" hidden>Account <b id="acctName" style="font-size:16px"></b> <button class="btn" id="logoutBtn" style="padding:4px 10px;font-size:13px;margin:0 10px 0 4px">Log out</button></span>Fighting as <b id="whoName"></b> <button class="btn" id="nameChange" style="padding:4px 10px;font-size:13px;margin-left:6px">Change name</button></p><p>Pick your skin, step into the ring. Three rounds, sixty seconds each. Knock them out or win on points.</p></div>
     <section style="display:grid;gap:10px">
-      <div class="lbl" id="pickLbl">Choose your skin</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div class="lbl" id="pickLbl">Choose your skin</div><button class="btn" id="pickBack" hidden style="padding:4px 12px;font-size:13px">Back</button></div>
       <div class="grid" id="skinGrid"></div>
       <div class="gear"><div class="gearrow"><span class="lbl">Gloves</span><div class="sws" id="gearG" role="group" aria-label="Glove color"></div></div><div class="gearrow"><span class="lbl">Trunks</span><div class="sws" id="gearT" role="group" aria-label="Trunks color"></div></div></div>
     </section>
     <section style="display:grid;gap:10px">
       <div class="lbl">Choose a fight</div>
       <div class="modes">
-        <button class="mode primary" id="mCpu"><b>Fight the CPU</b><span id="cpuSub">A random skin steps in against you.</span></button>
+        <button class="mode primary" id="mCpu"><b>Fight the CPU</b><span id="cpuSub">Pick your opponent or go random.</span></button>
         <button class="mode" id="mLocal"><b>2 players · this device</b><span>Share one screen and keyboard, or split the phone.</span></button>
         <button class="mode" id="mQuick"><b>Quick match</b><span>Get paired with anyone else searching right now.</span></button>
         <button class="mode" id="mHost"><b>Host online match</b><span>Get a code and send it to a friend.</span></button>
@@ -817,11 +819,11 @@ async function recordResult(r){// r:{win,draw,ko,koTime,skin,tourWin}
 
 /* ---------- menus & modes ---------- */
 const game={mode:null,F:null,A:null,B:null,ai:null,net:null,names:['',''],tags:['',''],lastHp:[100,100],epoch:0,seenEv:0,lastPh:null,intro:null,shake:0,slowT:0,slowK:1,tour:null,tut:null};
-function renderSkinGrid(sel,onPick,allowLocked){const g=$('#skinGrid');g.innerHTML='';SKINS.map((s,i)=>[s,i]).sort((a,b)=>RAR_ORDER[a[0].rarity]-RAR_ORDER[b[0].rarity]||a[1]-b[1]).forEach(([s,i])=>{const locked=!allowLocked&&!isUnlocked(i);const c=skinCard(i,i===sel,{locked:locked?lockText(i):'',champ:hasBelt(i)});
+function renderSkinGrid(sel,onPick,allowLocked,withRandom){const g=$('#skinGrid');g.innerHTML='';if(withRandom){const c=document.createElement('button');c.className='card r-random';c.setAttribute('aria-label','Random opponent');c.innerHTML='<span class="face rq">?</span><span class="nm">Random</span><span class="rr">Surprise me</span><span class="ab">A different fighter every time</span>';c.onclick=()=>onPick(-1);g.appendChild(c)}SKINS.map((s,i)=>[s,i]).sort((a,b)=>RAR_ORDER[a[0].rarity]-RAR_ORDER[b[0].rarity]||a[1]-b[1]).forEach(([s,i])=>{const locked=!allowLocked&&!isUnlocked(i);const c=skinCard(i,i===sel,{locked:locked?lockText(i):'',champ:hasBelt(i)});
   c.onclick=()=>{if(locked){menuErr(`${s.name} is locked. ${lockText(i)}.`);return}onPick(i)};g.appendChild(c)})}
 function pickHandler(i){mySkin=i;store.set('rr.skin',i);renderSkinGrid(mySkin,pickHandler);showcase();$('#menuStatus').textContent=''}
-function renderDiff(){document.querySelectorAll('#diffRow button').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.d===difficulty);b.onclick=()=>{difficulty=b.dataset.d;store.set('rr.diff',difficulty);renderDiff()}});$('#cpuSub').textContent=`A random skin steps in against you. Difficulty: ${DIFF[difficulty].name}.`}
-function showMenu(){game.outro=null;$('.topbar').style.opacity='';$('#whoName').textContent=myName||'—';renderDiff();renderGear();quickStop();game.mode=null;game.intro=null;game.tut=null;net.close();$('#hud').hidden=true;$('#intro').hidden=true;$('#tut').hidden=true;['#lobby','#vsOv','#result'].forEach(s=>$(s).hidden=true);$('#menu').hidden=false;$('#pickLbl').textContent='Choose your skin';if(!isUnlocked(mySkin))mySkin=firstUnlocked();renderSkinGrid(mySkin,pickHandler);$('#menuStatus').textContent='';$('#menuStatus').className='status';renderLB();showcase()}
+function renderDiff(){document.querySelectorAll('#diffRow button').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.d===difficulty);b.onclick=()=>{difficulty=b.dataset.d;store.set('rr.diff',difficulty);renderDiff()}});$('#cpuSub').textContent=`Pick your opponent or go random. Difficulty: ${DIFF[difficulty].name}.`}
+function showMenu(){$('#pickBack').hidden=true;game.outro=null;$('.topbar').style.opacity='';$('#whoName').textContent=myName||'—';renderDiff();renderGear();quickStop();game.mode=null;game.intro=null;game.tut=null;net.close();$('#hud').hidden=true;$('#intro').hidden=true;$('#tut').hidden=true;['#lobby','#vsOv','#result'].forEach(s=>$(s).hidden=true);$('#menu').hidden=false;$('#pickLbl').textContent='Choose your skin';if(!isUnlocked(mySkin))mySkin=firstUnlocked();renderSkinGrid(mySkin,pickHandler);$('#menuStatus').textContent='';$('#menuStatus').className='status';renderLB();showcase()}
 function showcase(){const other=(mySkin+1)%SKINS.length;setBoxers(mySkin,other,myGear,p2Gear());game.F=newFight(mySkin,other);game.F.ph='show'}
 function setBoxers(a,b,gA,gB){disposeBoxer(game.A);disposeBoxer(game.B);game.A=makeBoxer(a,gA||myGear);game.B=makeBoxer(b,gB||p2Gear())}
 function renderGear(){[['#gearG',GLOVES,0],['#gearT',TRUNKS,1]].forEach(([id,list,k])=>{const el=$(id);el.innerHTML='';list.forEach(([n,c],i)=>{const b=document.createElement('button');b.className='sw';b.style.background='#'+c.toString(16).padStart(6,'0');b.setAttribute('aria-pressed',myGear[k]===i);b.setAttribute('aria-label',(k?'Trunks: ':'Gloves: ')+n);b.title=n;b.onclick=()=>{myGear[k]=i;store.set('rr.gear',myGear);renderGear();showcase()};el.appendChild(b)})})}
@@ -829,8 +831,10 @@ function randomOpp(){// shuffled rotation: everyone once before repeats, never t
   const pool=SKINS.map((_,i)=>i).filter(i=>i!==mySkin);let bag=(store.get('rr.bag')||[]).filter(i=>pool.includes(i));const last=store.get('rr.lastOpp');
   if(!bag.length){bag=pool.slice();for(let i=bag.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[bag[i],bag[j]]=[bag[j],bag[i]]}if(bag.length>1&&bag[0]===last)bag.push(bag.shift())}
   const o=bag.shift();store.set('rr.bag',bag);store.set('rr.lastOpp',o);return o}
-$('#mCpu').onclick=()=>{ac();const o=randomOpp();startFight('cpu',mySkin,o,[tagYou(),'CPU · '+DIFF[difficulty].name])};
-$('#mLocal').onclick=()=>{ac();$('#pickLbl').textContent='Player 2: choose your skin';$('#menuStatus').textContent=`Player 1 is ${SKINS[mySkin].name}. Player 2, tap a skin to start.`;$('#menuStatus').className='status';
+$('#mCpu').onclick=()=>{ac();$('#pickLbl').textContent='Choose your CPU opponent';$('#pickBack').hidden=false;$('#menuStatus').className='status';$('#menuStatus').textContent=`You’re ${SKINS[mySkin].name}. Tap who you want to fight, or Random.`;
+  renderSkinGrid(-1,i=>{$('#pickBack').hidden=true;startFight('cpu',mySkin,i<0?randomOpp():i,[tagYou(),'CPU · '+DIFF[difficulty].name])},true,true);$('#pickLbl').scrollIntoView({behavior:'smooth',block:'start'})};
+$('#pickBack').onclick=()=>showMenu();
+$('#mLocal').onclick=()=>{ac();$('#pickLbl').textContent='Player 2: choose your skin';$('#pickBack').hidden=false;$('#menuStatus').textContent=`Player 1 is ${SKINS[mySkin].name}. Player 2, tap a skin to start.`;$('#menuStatus').className='status';
   renderSkinGrid(-1,i=>{startFight('local',mySkin,i,[myName||'Player 1','Player 2'])});$('#skinGrid').scrollIntoView({behavior:'smooth',block:'center'})};
 $('#mHost').onclick=async()=>{ac();const code=Array.from({length:4},()=>'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.random()*31|0]).join('');
   try{await net.open(code.toLowerCase(),'host')}catch(e){return menuErr('Couldn’t reach the online server. Check your internet connection and try again.')}
