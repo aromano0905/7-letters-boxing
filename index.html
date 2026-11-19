@@ -363,17 +363,18 @@ const SKINS=[
   {name:'Dom',rarity:'Rare',img:HEADS.DOM,ar:1.09,w:.36,tone:0xe0aa90,spd:1,hp:85,pw:{k:'ankle',every:20,name:'Ankle biter',dmg:25}},
   {name:'Moloney',rarity:'Rare',img:HEADS.MOLONEY,ar:1.3,w:.3,tone:0xe8b49a,spd:.85,hp:115,pw:{k:'headbutt',every:20,name:'Brain damage'}},
   {name:'Lapointe',rarity:'Epic',img:HEADS.LAPOINTE,ar:1.91,w:.25,tone:0xeab8a0,spd:.8,hp:120,pw:{k:'flash',every:15,name:'Camera shutter'}},
-  {name:'Coptic Lord Bear John',rarity:'Special Edition',img:HEADS.BEAR,ar:1.184,w:.78,bodyPic:true,tone:0x6b4a2e,spd:.85,hp:150,pw:{k:'bear_maul',every:15,name:'Bear maul'},unlock:{wins:50}}
+  {name:'Coptic Lord Bear John',rarity:'Special Edition',img:HEADS.BEAR,ar:1.184,w:.78,bodyPic:true,tone:0x6b4a2e,spd:.85,hp:150,pow:140,pw:{k:'bear_maul',every:15,name:'Bear maul'},unlock:{wins:50}}
 ];
 const GLOVES=[['Red',0xd8323c],['Blue',0x2f6fe0],['Black',0x1d1d22],['Gold',0xe8b923],['White',0xf2f2ee],['Pink',0xf06ba8],['Green',0x2fa65a],['Maroon',0x7a1f30]];
 const TRUNKS=[['Maroon',0x7a1f30],['Black',0x1d1d22],['White',0xf2f2ee],['Royal blue',0x2447a8],['Gold',0xe8b923],['Red',0xc8282e],['Green',0x1f7a45],['Purple',0x5b2c91]];
 const validGear=g=>Array.isArray(g)&&g.length===2&&GLOVES[g[0]|0]&&TRUNKS[g[1]|0]?[g[0]|0,g[1]|0]:null;
 const CEL=['golf','uppercuts','pudding','dance','bmw','tesla','belt','spin','chart','stomp','hotdog','photo','roar'];
+SKINS.forEach(s=>{if(s.pow==null)s.pow=Math.round(200-s.spd*100)});
 const rarCls=r=>'r-'+r.toLowerCase().replace(/\s+/g,'-');
 function skinCard(i,pressed,opt){opt=opt||{};const s=SKINS[i];const c=document.createElement('button');c.className='card '+rarCls(s.rarity)+(opt.locked?' locked':'');c.setAttribute('aria-pressed',!!pressed);if(opt.locked)c.setAttribute('aria-disabled','true');
   const f=document.createElement('span');f.className='face';f.style.backgroundImage=`url(${s.img})`;if(s.bodyPic){f.style.backgroundSize='150%';f.style.backgroundPosition='center 12%'}const n=document.createElement('span');n.className='nm';n.textContent=s.name;
   const r=document.createElement('span');r.className='rr';r.textContent=s.rarity;const e=document.createElement('span');e.className='eq';e.textContent='Equipped';
-  const ab=document.createElement('span');ab.className='ab';ab.textContent=`${s.pw.name} · every ${s.pw.every} hits`+(s.heal?` · ${s.heal} heal${s.heal>1?'s':''}`:'');const sts=document.createElement('span');sts.className='sts';sts.textContent=`Speed ${Math.round(s.spd*100)} · Health ${s.hp}`;c.append(f,n,r,ab,sts,e);if(opt.champ){const ch=document.createElement('span');ch.className='belt';ch.textContent='Champion';c.appendChild(ch)}if(opt.locked){const lk=document.createElement('span');lk.className='lock';lk.textContent=opt.locked;c.appendChild(lk)}return c}
+  const ab=document.createElement('span');ab.className='ab';ab.textContent=`${s.pw.name} · every ${s.pw.every} hits`+(s.heal?` · ${s.heal} heal${s.heal>1?'s':''}`:'');const sts=document.createElement('span');sts.className='sts';sts.textContent=`Speed ${Math.round(s.spd*100)} · Health ${s.hp} · Power ${s.pow}`;c.append(f,n,r,ab,sts,e);if(opt.champ){const ch=document.createElement('span');ch.className='belt';ch.textContent='Champion';c.appendChild(ch)}if(opt.locked){const lk=document.createElement('span');lk.className='lock';lk.textContent=opt.locked;c.appendChild(lk)}return c}
 
 /* ============ THREE ============ */
 const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
@@ -605,7 +606,7 @@ const PUNCH={jab:{wu:.09,act:.09,end:.32,reach:1.22,dmg:2,st:7,anim:'jab'},hook:
   suplex:{wu:.25,act:.12,end:.9,reach:1.08,dmg:8,st:0,anim:'grab',pw:true,slam:true}};
 const PKEYS=['jab','hook','upper','power_punch','power_upper','power_slap','pudding','bmw','tesla','bear_maul','suplex','basketball','stock','ankle','headbutt','flash'],STATES=['idle','walk','punch','hit','ko','slam'],ACTS=['jab','hook','upper','power','heal'],PROJ=['pudding','bmw','tesla','basketball','stock'];
 const ROUND_LEN=60,ROUNDS=3;
-function newBoxer(side,skin){const S=SKINS[skin];return{side,skin,max:S.hp,spd:S.spd,pwN:0,heals:S.heal||0,healUsed:!S.heal,x:side*1.4,hp:S.hp,st:100,s:'idle',t:0,p:null,hitDone:false,block:false,dealt:0,landed:0,thrown:0,q:null,qt:0,
+function newBoxer(side,skin){const S=SKINS[skin];return{side,skin,max:S.hp,spd:S.spd,pow:S.pow/100,pwN:0,heals:S.heal||0,healUsed:!S.heal,x:side*1.4,hp:S.hp,st:100,s:'idle',t:0,p:null,hitDone:false,block:false,dealt:0,landed:0,thrown:0,q:null,qt:0,
   combo:0,comboT:0,best:0,thrI:0,kdR:0,kdTotal:0}}
 function newFight(skA,skB){return{ph:'intro',t:0,r:1,time:ROUND_LEN,A:newBoxer(-1,skA),B:newBoxer(1,skB),w:0,how:'',ev:[],proj:[],kd:null}}
 const KD_THR=[.55,.25],KD_NEED=[10,16,22];
@@ -659,7 +660,7 @@ function boxerStep(F,b,o,inp,dt){
   if(b.s!=='punch')b.st=Math.min(100,b.st+(b.block?7:19)*dt);
 }
 const COMBO_WIN=.9;
-function land(F,a,o,d){let dmg=d.pw?d.dmg:d.dmg*(.5+.5*a.st/100);const push=-a.side;
+function land(F,a,o,d){let dmg=d.pw?d.dmg:d.dmg*(.5+.5*a.st/100)*(a.pow||1);const push=-a.side;
   if(!d.pw&&o.block){o.st=Math.max(0,o.st-d.dmg*2.2);dmg*=.15;o.hp-=dmg;a.dealt+=dmg;o.x+=push*.08;a.combo=0;a.comboT=0;F.ev.push('block');F.ev.push(o.side<0?'blkA':'blkB');o.hp=Math.max(0,o.hp);if(o.hp<=0)afterDamage(F,o,false);return}
   a.combo=a.comboT>0?a.combo+1:1;a.comboT=COMBO_WIN;a.best=Math.max(a.best,a.combo);
   const bonus=1+.25*Math.min(Math.max(a.combo-2,0),4);dmg*=bonus;
@@ -898,7 +899,7 @@ $('#stage').addEventListener('pointerdown',skipIntro);
 function introTick(dt){const I=game.intro;if(!I)return false;I.t+=dt;const F=game.F;const el=$('#intro');
   const ph=I.t<2.1?0:I.t<4.2?1:2;
   if(ph!==I.shown){I.shown=ph;if(ph<2){const b=ph?F.B:F.A;const S=SKINS[b.skin];el.hidden=false;el.classList.toggle('right',ph===1);const card=$('#inCard');card.className='in-card '+rarCls(S.rarity);card.style.animation='none';void card.offsetWidth;card.style.animation='';
-      $('#inTag').textContent=(ph?'In the blue corner':'In the red corner')+' · '+game.tags[ph];$('#inName').textContent=S.name;$('#inRar').textContent=S.rarity+(hasBelt(b.skin)?' · Champion':'');$('#inAb').textContent=`${S.pw.name} · Speed ${Math.round(S.spd*100)} · Health ${S.hp}`+(S.heal?` · ${S.heal} heal${S.heal>1?'s':''}`:'');sfx('crowd')}
+      $('#inTag').textContent=(ph?'In the blue corner':'In the red corner')+' · '+game.tags[ph];$('#inName').textContent=S.name;$('#inRar').textContent=S.rarity+(hasBelt(b.skin)?' · Champion':'');$('#inAb').textContent=`${S.pw.name} · Speed ${Math.round(S.spd*100)} · Health ${S.hp} · Power ${S.pow}`+(S.heal?` · ${S.heal} heal${S.heal>1?'s':''}`:'');sfx('crowd')}
     else el.hidden=true}
   if(I.t>=I.dur){game.intro=null;el.hidden=true;return false}return true}
 function fx(e){if(e==='flash'){const f=$('#flashFx');f.style.transition='none';f.style.opacity='.85';void f.offsetWidth;f.style.transition='opacity .45s';f.style.opacity='0';[game.A,game.B].forEach(g=>{if(g&&g.cam&&g.cam.visible)g.cam.userData.fl=1})}if(e==='stunned')announce('Stunned!','',900);const calm=matchMedia('(prefers-reduced-motion:reduce)').matches;const S=(a)=>{if(!calm)game.shake=Math.max(game.shake,a)};
