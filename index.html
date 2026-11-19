@@ -649,7 +649,7 @@ function syncProj(F){const used={pudding:0,bmw:0,tesla:0,basketball:0,stock:0};(
 
 /* ============ FIGHT SIM ============ */
 const PUNCH={jab:{wu:.09,act:.09,end:.32,reach:1.22,dmg:2,st:7,anim:'jab'},hook:{wu:.2,act:.1,end:.55,reach:1.05,dmg:4,st:13,anim:'hook'},upper:{wu:.26,act:.1,end:.62,reach:.92,dmg:5.5,st:17,anim:'upper'},
-  power_punch:{wu:.3,act:.1,end:.72,reach:1.35,dmg:6,st:0,anim:'golf',pw:true},power_upper:{wu:.24,act:.1,end:.62,reach:1.05,dmg:6,st:0,anim:'upper',pw:true},power_slap:{wu:.14,act:.1,end:.45,reach:1.2,dmg:4,st:0,anim:'hook',pw:true},
+  power_punch:{wu:.3,act:.1,end:.72,reach:1.35,dmg:6,st:0,anim:'golf',pw:true},power_upper:{wu:.24,act:.1,end:.62,reach:1.05,dmg:6,st:0,anim:'upper',pw:true},
   pudding:{wu:.3,act:.05,end:.62,reach:0,dmg:0,st:0,anim:'throw',pw:true,thr:true},bmw:{wu:.36,act:.05,end:.72,reach:0,dmg:0,st:0,anim:'throw',pw:true,thr:true},tesla:{wu:.36,act:.05,end:.72,reach:0,dmg:0,st:0,anim:'throw',pw:true,thr:true},
   talk:{wu:.3,act:0,end:.8,reach:3.2,dmg:0,st:0,anim:'talk',pw:true,stun:2,fx:'talk'},
   butt:{wu:.3,act:.1,end:.72,reach:1.1,dmg:6,st:0,anim:'butt',pw:true},
@@ -660,7 +660,7 @@ const PUNCH={jab:{wu:.09,act:.09,end:.32,reach:1.22,dmg:2,st:7,anim:'jab'},hook:
   basketball:{wu:.3,act:.05,end:.62,reach:0,dmg:0,st:0,anim:'throw',pw:true,thr:true},
   bear_maul:{wu:.22,act:.12,end:.6,reach:1.25,dmg:10,st:0,anim:'hook',pw:true},
   suplex:{wu:.25,act:.12,end:.9,reach:1.08,dmg:8,st:0,anim:'grab',pw:true,slam:true}};
-const PKEYS=['jab','hook','upper','power_punch','power_upper','power_slap','pudding','bmw','tesla','bear_maul','suplex','basketball','stock','ankle','headbutt','flash','butt','talk'],STATES=['idle','walk','punch','hit','ko','slam','dodge'],ACTS=['jab','hook','upper','power','heal','dodge'],PROJ=['pudding','bmw','tesla','basketball','stock'];
+const PKEYS=['jab','hook','upper','power_punch','power_upper','pudding','bmw','tesla','bear_maul','suplex','basketball','stock','ankle','headbutt','flash','butt','talk'],STATES=['idle','walk','punch','hit','ko','slam','dodge'],ACTS=['jab','hook','upper','power','heal','dodge'],PROJ=['pudding','bmw','tesla','basketball','stock'];
 const ROUND_LEN=60,ROUNDS=3;
 function newBoxer(side,skin){const S=SKINS[skin];return{side,skin,max:S.hp,spd:S.spd,pow:S.pow/100,pwN:0,heals:S.heal||0,healUsed:!S.heal,x:side*1.4,hp:S.hp,st:100,s:'idle',t:0,p:null,hitDone:false,block:false,dealt:0,landed:0,thrown:0,q:null,qt:0,
   combo:0,comboT:0,best:0,thrI:0,kdR:0,kdTotal:0}}
