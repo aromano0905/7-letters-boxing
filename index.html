@@ -49,7 +49,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .diff button[aria-pressed="true"]{background:#fff;color:#111;border-color:#fff}
 .recs{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px}
 @media (max-width:700px){.recs{grid-template-columns:minmax(0,1fr)}}
-.tbl{overflow-x:auto}
+.tbl{overflow-x:auto}#lbPlayers,#lbSkins{max-height:338px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.3) transparent;border:1px solid var(--line);border-radius:10px}
+#lbPlayers th,#lbSkins th{position:sticky;top:0;z-index:1;background:#14151b}
 .tbl table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 .tbl th,.tbl td{padding:6px 8px;text-align:center;border-bottom:1px solid var(--line);font-size:14px;white-space:nowrap}
 .tbl th{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
@@ -1018,7 +1019,7 @@ function renderLB(){const P=progress();const mr=$('#myRec');
   if(LB.status==='off'){pl.innerHTML='<p class="status">'+(ACC.on?'Log in to save your record and appear on the leaderboard.':'Your record, unlocks and gear are saved on this device.')+'</p>';sk.innerHTML='';note.textContent='';return}
   const recs=LB.recs.filter(r=>(r.wins|0)+(r.losses|0)>0);
   if(!recs.length){pl.innerHTML='<p class="status">No fights recorded yet. Beat the CPU, win a tournament fight or an online match to get on the board.</p>'}
-  else{const rows=recs.slice().sort((a,b)=>(b.wins|0)-(a.wins|0)||(b.kos|0)-(a.kos|0)).slice(0,10);
+  else{const rows=recs.slice().sort((a,b)=>(b.wins|0)-(a.wins|0)||(b.kos|0)-(a.kos|0));
     pl.innerHTML='<table><thead><tr><th>#</th><th class="nm">Player</th><th>Lv</th><th>Wins</th><th>Losses</th><th>KOs</th><th>Fastest KO</th><th>Belts</th></tr></thead><tbody>'+rows.map((r,i)=>`<tr class="${r.id===LB.uid?'me':''}"><td>${i+1}</td><td class="nm">${esc((typeof r.name==='string'&&cleanName(r.name))||LB.names[r.id]||(r.id===LB.uid?'You':'Player'))}</td><td>${lvInfo(r.xp|0).L}</td><td>${r.wins|0}</td><td>${r.losses|0}</td><td>${r.kos|0}</td><td>${fmtT(typeof r.fastKo==='number'?r.fastKo:null)}</td><td>${r.tourn|0}</td></tr>`).join('')+'</tbody></table>'}
   const agg=SKINS.map(s=>({n:s.name,w:0,l:0,ko:0}));recs.forEach(r=>{const S=r.skins||{};agg.forEach(a=>{const x=S[a.n];if(x){a.w+=x.w|0;a.l+=x.l|0;a.ko+=x.ko|0}})});
   agg.sort((a,b)=>b.w-a.w||a.l-b.l);
@@ -1432,7 +1433,7 @@ $('#logoutBtn').onclick=async()=>{await ACC.logOut()};
 /* leaderboard backed by the account database */
 let lbUnsub=[];function stopLB(){lbUnsub.forEach(f=>{try{f()}catch(e){}});lbUnsub=[]}
 function startLB(){stopLB();const fs=ACC.fs,uid=ACC.user.uid;LB.db={doc:p=>fs.doc(p),collection:p=>fs.collection(p)};LB.uid=uid;LB.canWrite=true;LB.status='loading';LB.user=null;renderLB();
-  lbUnsub.push(fs.collection('records').orderBy('wins','desc').limit(50).onSnapshot(s=>{LB.recs=s.docs.map(d=>({id:d.id,...(d.data()||{})}));LB.status='ok';renderLB()},()=>{LB.status='off';renderLB()}));
+  lbUnsub.push(fs.collection('records').orderBy('wins','desc').limit(1000).onSnapshot(s=>{LB.recs=s.docs.map(d=>({id:d.id,...(d.data()||{})}));LB.status='ok';renderLB()},()=>{LB.status='off';renderLB()}));
   lbUnsub.push(fs.doc('records/'+uid).onSnapshot(d=>{LB.mine=d.exists?{id:uid,...d.data()}:null;if(LB.mine&&typeof LB.mine.name==='string')adoptSavedName(LB.mine.name);syncWallet();renderLevel();renderLB();if(!$('#menu').hidden)renderSkinGrid(mySkin,pickHandler)},()=>{}))}
 /* change password */
 $('#pwForm').addEventListener('submit',async e=>{e.preventDefault();const msg=$('#pwMsg');msg.className='status';const o=$('#pwOld').value,n=$('#pwNew').value,n2=$('#pwNew2').value;
