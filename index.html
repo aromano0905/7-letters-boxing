@@ -152,6 +152,16 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
 .card .face.fs-chrome{filter:grayscale(1) contrast(1.25) brightness(1.15)}
 .card .stb{position:absolute;bottom:6px;right:6px;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-radius:4px;padding:1px 6px}
 .stb.st-gold{background:linear-gradient(90deg,#f2c230,#fff3a6);color:#3a2600}.stb.st-chrome{background:linear-gradient(90deg,#c9d1da,#fff);color:#1a1d22}
+.pf-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.pf-name{font-family:var(--display);font-style:italic;font-weight:800;font-size:clamp(40px,8vw,64px);line-height:.9;text-transform:uppercase;margin:2px 0 4px}
+.pf-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.pf-tile{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:grid;gap:2px}
+.pf-tile b{font-family:var(--display);font-weight:800;font-size:32px;line-height:1;font-variant-numeric:tabular-nums}
+.pf-tile span{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.pf-face{width:34px;height:34px;border-radius:8px;background-size:cover;background-position:center 30%;display:inline-block;vertical-align:middle;margin-right:8px}
+.pf-st{font-size:11px;font-weight:700;border-radius:4px;padding:1px 6px;white-space:nowrap}
+.pf-st.on.st-gold{background:linear-gradient(90deg,#f2c230,#fff3a6);color:#3a2600}.pf-st.on.st-chrome{background:linear-gradient(90deg,#c9d1da,#fff);color:#1a1d22}.pf-st.off{color:var(--muted);border:1px solid var(--line)}
+#pwMsg.ok{color:#6be38a}
 .ain{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);font:inherit;font-size:17px;width:100%}
 #authForm .lbl{text-align:left;margin-bottom:-6px}
 .modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
@@ -231,7 +241,7 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
 
 <div class="ov" id="menu" hidden>
   <div class="wrap">
-    <div class="title"><h1>7 Letters<br>Boxing</h1><p class="who"><span id="acctRow" hidden>Account <b id="acctName" style="font-size:16px"></b> <button class="btn" id="logoutBtn" style="padding:4px 10px;font-size:13px;margin:0 10px 0 4px">Log out</button></span>Fighting as <b id="whoName"></b> <button class="btn" id="nameChange" style="padding:4px 10px;font-size:13px;margin-left:6px">Change name</button></p><p>Pick your skin, step into the ring. Three rounds, sixty seconds each. Knock them out or win on points.</p></div>
+    <div class="title"><h1>7 Letters<br>Boxing</h1><p class="who"><span id="acctRow" hidden>Account <b id="acctName" style="font-size:16px"></b> <button class="btn" id="logoutBtn" style="padding:4px 10px;font-size:13px;margin:0 10px 0 4px">Log out</button></span>Fighting as <b id="whoName"></b> <button class="btn" id="nameChange" style="padding:4px 10px;font-size:13px;margin-left:6px">Change name</button><button class="btn primary" id="profileBtn" style="padding:4px 12px;font-size:13px;margin-left:6px">Profile</button></p><p>Pick your skin, step into the ring. Three rounds, sixty seconds each. Knock them out or win on points.</p></div>
     <section style="display:grid;gap:10px">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div class="lbl" id="pickLbl">Choose your skin</div><button class="btn" id="pickBack" hidden style="padding:4px 12px;font-size:13px">Back</button></div>
       <div class="grid" id="skinGrid"></div>
@@ -276,6 +286,25 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
   <div class="center" style="max-width:700px">
     <div class="lbl" id="vsLbl">Tonight's main event</div>
     <div class="vs"><div id="vsA"></div><div class="x">VS</div><div id="vsB"></div></div>
+  </div>
+</div>
+
+<div class="ov" id="profileOv" hidden role="dialog" aria-labelledby="pfName">
+  <div class="wrap" style="max-width:860px">
+    <div class="pf-head"><div><div class="lbl" id="pfSub">Profile</div><h2 id="pfName" class="pf-name">Player</h2><p class="status" id="pfMeta"></p></div><button class="btn" id="pfClose">Back to menu</button></div>
+    <div class="pf-tiles" id="pfTiles"></div>
+    <p class="status" id="pfFav"></p>
+    <section style="display:grid;gap:8px"><div class="lbl">Fighters</div><div class="tbl" id="pfFighters"></div></section>
+    <section id="pwSection" hidden style="display:grid;gap:10px;max-width:420px">
+      <div class="lbl">Change password</div>
+      <form id="pwForm" style="display:grid;gap:8px" novalidate>
+        <label class="lbl" for="pwOld" style="font-size:11px">Current password</label><input id="pwOld" class="ain" type="password" autocomplete="current-password" maxlength="64">
+        <label class="lbl" for="pwNew" style="font-size:11px">New password</label><input id="pwNew" class="ain" type="password" autocomplete="new-password" maxlength="64" placeholder="At least 6 characters">
+        <label class="lbl" for="pwNew2" style="font-size:11px">Confirm new password</label><input id="pwNew2" class="ain" type="password" autocomplete="new-password" maxlength="64">
+        <p class="status" id="pwMsg" role="status"></p>
+        <button class="btn primary" type="submit" id="pwGo">Change password</button>
+      </form>
+    </section>
   </div>
 </div>
 
@@ -919,6 +948,22 @@ function quickStop(){qm.on=false}
 async function quickTick(){}
 $('#mQuick').onclick=quickStart;
 $('#nameChange').onclick=showNameScreen;
+function profileData(){const m=LB.mine||{};const P=progress();const n=k=>Math.max(prog[k]|0,m[k]|0);
+  const skins={};SKINS.forEach((s,i)=>{const x=(m.skins||{})[s.name]||{};skins[s.name]={w:Math.max(x.w|0,(prog.skinW||{})[s.name]|0),l:x.l|0,ko:x.ko|0,i}});
+  return{wins:n('wins'),losses:n('losses'),draws:m.draws|0,kos:n('kos'),tourn:P.tourn,fastKo:typeof m.fastKo==='number'?m.fastKo:null,skins}}
+function showProfile(){const d=profileData();$('#menu').hidden=true;$('#profileOv').hidden=false;
+  $('#pfName').textContent=myName||'Player';const acct=typeof ACC!=='undefined'&&ACC.on&&ACC.user;$('#pfSub').textContent='Profile';
+  $('#pfMeta').textContent=acct?`Account @${ACC.username}`+(ACC.user.metadata&&ACC.user.metadata.creationTime?` · Member since ${new Date(ACC.user.metadata.creationTime).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}`:''):'Stats saved on this device';
+  const games=d.wins+d.losses+d.draws;const tiles=[['Wins',d.wins],['Losses',d.losses],['Win %',games?Math.round(d.wins/games*100)+'%':'—'],['KOs',d.kos],['Fastest KO',fmtT(d.fastKo)],['Belts',d.tourn]];
+  const t=$('#pfTiles');t.innerHTML='';tiles.forEach(([l,v])=>{const e=document.createElement('div');e.className='pf-tile';const b=document.createElement('b');b.textContent=v;const sp=document.createElement('span');sp.textContent=l;e.append(b,sp);t.appendChild(e)});
+  const ranked=SKINS.map(s=>[s,d.skins[s.name]]).sort((a,b)=>b[1].w-a[1].w||(b[1].ko-a[1].ko));
+  $('#pfFav').textContent=ranked[0][1].w?`Favorite fighter: ${ranked[0][0].name} (${ranked[0][1].w} win${ranked[0][1].w===1?'':'s'})`:'Win a fight to start building your stats.';
+  let h='<table><thead><tr><th class="nm">Fighter</th><th>Wins</th><th>Losses</th><th>KOs</th><th>Chrome</th><th>Gold</th></tr></thead><tbody>';
+  ranked.forEach(([s,x])=>{const st=(id,need)=>`<span class="pf-st ${x.w>=need?'on st-'+id:'off'}">${x.w>=need?'Unlocked':Math.min(x.w,need)+'/'+need}</span>`;
+    h+=`<tr><td class="nm"><span class="pf-face" style="background-image:url(${s.img})"></span>${esc(s.name)}</td><td>${x.w}</td><td>${x.l}</td><td>${x.ko}</td><td>${st('chrome',10)}</td><td>${st('gold',25)}</td></tr>`});
+  $('#pfFighters').innerHTML=h+'</tbody></table>';
+  $('#pwSection').hidden=!acct;['#pwOld','#pwNew','#pwNew2'].forEach(i=>$(i).value='');$('#pwMsg').textContent='';$('#pwMsg').className='status';$('#profileOv').scrollTop=0}
+$('#profileBtn').onclick=showProfile;$('#pfClose').onclick=()=>{$('#profileOv').hidden=true;showMenu()};
 function menuErr(m){const s=$('#menuStatus');s.textContent=m;s.className='status err'}
 
 /* ---------- tournament ---------- */
@@ -1214,6 +1259,16 @@ let lbUnsub=[];function stopLB(){lbUnsub.forEach(f=>{try{f()}catch(e){}});lbUnsu
 function startLB(){stopLB();const fs=ACC.fs,uid=ACC.user.uid;LB.db={doc:p=>fs.doc(p),collection:p=>fs.collection(p)};LB.uid=uid;LB.canWrite=true;LB.status='loading';LB.user=null;renderLB();
   lbUnsub.push(fs.collection('records').orderBy('wins','desc').limit(50).onSnapshot(s=>{LB.recs=s.docs.map(d=>({id:d.id,...(d.data()||{})}));LB.status='ok';renderLB()},()=>{LB.status='off';renderLB()}));
   lbUnsub.push(fs.doc('records/'+uid).onSnapshot(d=>{LB.mine=d.exists?{id:uid,...d.data()}:null;if(LB.mine&&typeof LB.mine.name==='string')adoptSavedName(LB.mine.name);renderLB();if(!$('#menu').hidden)renderSkinGrid(mySkin,pickHandler)},()=>{}))}
+/* change password */
+$('#pwForm').addEventListener('submit',async e=>{e.preventDefault();const msg=$('#pwMsg');msg.className='status';const o=$('#pwOld').value,n=$('#pwNew').value,n2=$('#pwNew2').value;
+  if(!ACC.user){msg.textContent='Log in first.';return}if(!o){msg.className='status err';msg.textContent='Enter your current password.';return}
+  if(n.length<6){msg.className='status err';msg.textContent='New passwords need at least 6 characters.';return}if(n!==n2){msg.className='status err';msg.textContent='The new passwords don’t match.';return}
+  if(n===o){msg.className='status err';msg.textContent='Pick a password different from your current one.';return}
+  $('#pwGo').disabled=true;msg.textContent='Changing password…';
+  try{const EP=(ACC.fb.auth&&ACC.fb.auth.EmailAuthProvider);const cred=EP.credential(ACC.user.email,o);await ACC.user.reauthenticateWithCredential(cred);await ACC.user.updatePassword(n);
+    ['#pwOld','#pwNew','#pwNew2'].forEach(i=>$(i).value='');msg.className='status ok';msg.textContent='Password changed. Use the new one next time you log in.'}
+  catch(x){const c=(x&&x.code)||'';msg.className='status err';msg.textContent=(c==='auth/wrong-password'||c==='auth/invalid-credential'||c==='auth/invalid-login-credentials')?'Your current password is wrong.':c==='auth/weak-password'?'New passwords need at least 6 characters.':c==='auth/too-many-requests'?'Too many tries. Wait a minute and try again.':c==='auth/network-request-failed'?'Can’t reach the account server. Check your connection.':'Couldn’t change the password. Try again.'}
+  finally{$('#pwGo').disabled=false}});
 
 accountsBoot();requestAnimationFrame(frame);
 window.__rr={game,SKINS,startFight,stepFight,aiThinkT:(a,m,o,d)=>aiThink(a,m,o,d)};
