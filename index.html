@@ -395,19 +395,23 @@ const HEADS={"WILL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAE9CAYA
 
 /* ---------- P2P rooms over PeerJS (no accounts needed) ---------- */
 const P2P={prefix:'sevenlettersboxing-v1-',
-  opts(){return Object.assign({debug:0},window.P2P_OPTS||{})},
+  ICE:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302']},{urls:'stun:stun.cloudflare.com:3478'},
+    {urls:['turn:eu-0.turn.peerjs.com:3478','turn:us-0.turn.peerjs.com:3478'],username:'peerjs',credential:'peerjsp'},
+    {urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp','turns:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}],
+  opts(){return Object.assign({debug:0,pingInterval:4000,config:{iceServers:this.ICE}},window.P2P_OPTS||{})},
   join(name,mode){return new Promise((resolve,reject)=>{
     if(typeof Peer!=='function')return reject(new Error('offline'));
     const id=this.prefix+name;let done=false;const fin=(err,val)=>{if(done)return;done=true;clearTimeout(to);err?reject(err):resolve(val)};
-    const to=setTimeout(()=>{try{room.leave()}catch(e){}fin(new Error('timeout'))},12000);
+    let stage='server';const to=setTimeout(()=>{try{room.leave()}catch(e){}fin(new Error(stage==='server'?'server':'blocked'))},mode==='auto'?9000:22000);
     const room=makeRoom();
     const asGuest=()=>{const p=new Peer(this.opts());room._peer=p;
-      p.on('open',()=>{const c=p.connect(id,{serialization:'json'});room._attach(c,()=>fin(null,room));c.on('close',()=>{});});
-      p.on('error',e=>{if(e&&e.type==='peer-unavailable'){room.leave();fin(new Error('nohost'))}else if(!done){room.leave();fin(e)}});
+      p.on('open',()=>{stage='peer';const c=p.connect(id,{serialization:'json',reliable:true});c.on('error',()=>{});room._attach(c,()=>fin(null,room));c.on('close',()=>{});});
+      p.on('error',e=>{if(e&&e.type==='peer-unavailable'){room.leave();fin(new Error('nohost'))}else if(!done){room.leave();fin(new Error(stage==='server'?'server':'blocked'))}});
       room._onFull=()=>{room.leave();fin(new Error('full'))};room.isHub=false};
     if(mode==='guest'){asGuest();return}
     const p=new Peer(id,this.opts());room._peer=p;room.isHub=true;
     p.on('open',pid=>{room._me.peer=pid;fin(null,room)});
+    p.on('error',e=>{if(e&&(e.type==='network'||e.type==='server-error'||e.type==='socket-error'||e.type==='socket-closed')&&!done){try{p.destroy()}catch(er){}fin(new Error('server'))}});
     p.on('connection',c=>{if(room._conn&&room._conn.open){c.on('open',()=>{try{c.send({full:1})}catch(e){}setTimeout(()=>{try{c.close()}catch(e){}},400)});return}room._attach(c)});
     p.on('error',e=>{if(e&&e.type==='unavailable-id'){try{p.destroy()}catch(er){}if(mode==='host')fin(new Error('taken'));else asGuest()}else if(!done){fin(e)}});
     p.on('disconnected',()=>{try{p.reconnect()}catch(e){}});
@@ -1076,7 +1080,7 @@ $('#mHost').onclick=async()=>{ac();const code=Array.from({length:4},()=>'ABCDEFG
   try{await net.open(code.toLowerCase(),'host')}catch(e){return menuErr('Couldn’t reach the online server. Check your internet connection and try again.')}
   $('#menu').hidden=true;$('#lobby').hidden=false;$('#lobbyLbl').textContent='Your match code';$('#lobbyCode').textContent=code;$('#lobbyStatus').textContent='Send this code to a friend. The fight starts when they join.';game.mode='lobby-host'};
 $('#joinBtn').onclick=async()=>{ac();const code=$('#codeIn').value.trim().toUpperCase();if(!/^[A-Z0-9]{4}$/.test(code))return menuErr('Enter the 4-character code your friend sees.');
-  $('#joinBtn').disabled=true;$('#menuStatus').className='status';$('#menuStatus').textContent='Connecting to '+code+'…';try{await net.open(code.toLowerCase(),'guest');$('#menuStatus').textContent='';net.sendInput()}catch(e){$('#joinBtn').disabled=false;return menuErr(e&&e.message==='nohost'?'No match found for that code. Check the code, and make sure your friend is still on the code screen.':'Couldn’t connect. Check your internet connection and try again.')}
+  $('#joinBtn').disabled=true;$('#menuStatus').className='status';$('#menuStatus').textContent='Connecting to '+code+'…';try{await net.open(code.toLowerCase(),'guest');$('#menuStatus').textContent='';net.sendInput()}catch(e){$('#joinBtn').disabled=false;return menuErr(e&&e.message==='nohost'?'No match found for that code. Check the code, and make sure your friend is still on the code screen.':e&&e.message==='blocked'?'Found the match but couldn’t link up. One of your networks (school Wi‑Fi often does this) is blocking the connection. Try again, or have one of you switch to mobile data.':'Couldn’t reach the online server. Check your internet connection and try again.')}
   $('#joinBtn').disabled=false;$('#menu').hidden=true;$('#lobby').hidden=false;$('#lobbyLbl').textContent='Joining match';$('#lobbyCode').textContent=code;$('#lobbyStatus').textContent='Looking for the host…';game.mode='lobby-guest';game.joinAt=performance.now()};
 $('#codeIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('#joinBtn').click()});
 $('#lobbyCancel').onclick=()=>{quickStop();showMenu()};$('#quitBtn').onclick=showMenu;
@@ -1084,13 +1088,13 @@ $('#lobbyCancel').onclick=()=>{quickStop();showMenu()};$('#quitBtn').onclick=sho
 const qm={on:false,t0:0,hostAt:0,partner:null};
 function genCode(){return Array.from({length:4},()=>'abcdefghjkmnpqrstuvwxyz23456789'[Math.random()*31|0]).join('')}
 async function quickStart(){ac();if(typeof Peer!=='function')return menuErr('Couldn’t load online play. Check your internet connection and reload.');
-  qm.on=true;$('#menu').hidden=true;$('#lobby').hidden=false;$('#lobbyLbl').textContent='Quick match';$('#lobbyCode').textContent='· · ·';$('#lobbyStatus').textContent='Looking for an opponent…';game.mode='quick';
+  qm.on=true;qm.srvFail=0;$('#menu').hidden=true;$('#lobby').hidden=false;$('#lobbyLbl').textContent='Quick match';$('#lobbyCode').textContent='· · ·';$('#lobbyStatus').textContent='Looking for an opponent…';game.mode='quick';
   for(let i=0;i<10&&qm.on;i++){try{const r=await P2P.join('qm-'+i,'auto');if(!qm.on){r.leave();return}
       net.room=r;net.role=r.isHub?'host':'guest';net.code='quick';net.peer=null;net.pn=0;net.lastPn=0;net.seenAt=performance.now();
       await r.presence({role:net.role,sk:mySkin,gr:myGear,nm:myName,v:1});
       if(r.isHub){game.mode='lobby-host';$('#lobbyStatus').textContent='Waiting for an opponent. The fight starts as soon as someone else taps Quick match.'}
       else{net.sendInput();game.mode='lobby-guest';game.joinAt=performance.now();$('#lobbyStatus').textContent='Opponent found. Getting in the ring…'}
-      return}catch(e){}}
+      return}catch(e){if(e&&e.message==='server'&&++qm.srvFail>=2)break}}
   if(qm.on){qm.on=false;showMenu();menuErr('Couldn’t reach the matchmaking server. Check your connection and try again.')}}
 function quickStop(){qm.on=false}
 async function quickTick(){}
