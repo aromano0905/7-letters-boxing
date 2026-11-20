@@ -150,6 +150,8 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
 .stc.lockd{filter:grayscale(.9) brightness(.55);color:#fff}
 .stc[aria-pressed="true"]{box-shadow:0 0 0 3px #fff}
 .card .face.fs-gold{filter:sepia(1) saturate(2.6) hue-rotate(-8deg) brightness(1.08) contrast(1.05)}
+.card .face.fs-diamond{filter:grayscale(.5) sepia(.3) hue-rotate(155deg) saturate(1.6) brightness(1.18) contrast(1.05)}
+.stc.st-diamond{background:linear-gradient(135deg,#f4fbff,#9fdcff 35%,#e9f7ff 55%,#7fc9f5 80%,#ffffff);color:#06263a;border-color:#bfe9ff;box-shadow:inset 0 0 8px rgba(255,255,255,.8)}.stb.st-diamond{background:linear-gradient(90deg,#9fdcff,#fff);color:#06263a}
 .card .face.fs-chrome{filter:grayscale(1) contrast(1.25) brightness(1.15)}
 .card .stb{position:absolute;bottom:6px;right:6px;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-radius:4px;padding:1px 6px}
 .stb.st-gold{background:linear-gradient(90deg,#f2c230,#fff3a6);color:#3a2600}.stb.st-chrome{background:linear-gradient(90deg,#c9d1da,#fff);color:#1a1d22}
@@ -596,7 +598,7 @@ const rarCls=r=>'r-'+r.toLowerCase().replace(/\s+/g,'-');
 function skinCard(i,pressed,opt){opt=opt||{};const s=SKINS[i];const c=document.createElement('button');c.className='card '+rarCls(s.rarity)+(opt.locked?' locked':'');c.setAttribute('aria-pressed',!!pressed);if(opt.locked)c.setAttribute('aria-disabled','true');
   const f=document.createElement('span');f.className='face';f.style.backgroundImage=`url(${s.img})`;if(s.bodyPic){f.style.backgroundSize='150%';f.style.backgroundPosition='center 12%'}const n=document.createElement('span');n.className='nm';n.textContent=s.name;
   const r=document.createElement('span');r.className='rr';r.textContent=s.rarity;const e=document.createElement('span');e.className='eq';e.textContent='Equipped';
-  const ab=document.createElement('span');ab.className='ab';ab.textContent=`${s.pw.name} · every ${s.pw.every} hits`+(s.heal?` · ${s.heal} heal${s.heal>1?'s':''}`:'');const sts=document.createElement('span');sts.className='sts';sts.textContent=`Speed ${Math.round(s.spd*100)} · Health ${s.hp} · Power ${s.pow}`;c.append(f,n,r,ab,sts,e);if(opt.style&&opt.style!=='default'){f.classList.add('fs-'+opt.style);const sb=document.createElement('span');sb.className='stb st-'+opt.style;sb.textContent=opt.style==='gold'?'Gold':'Chrome';c.appendChild(sb)}if(opt.champ){const ch=document.createElement('span');ch.className='belt';ch.textContent='Champion';c.appendChild(ch)}if(opt.locked){const lk=document.createElement('span');lk.className='lock';lk.textContent=opt.locked;c.appendChild(lk)}return c}
+  const ab=document.createElement('span');ab.className='ab';ab.textContent=`${s.pw.name} · every ${s.pw.every} hits`+(s.heal?` · ${s.heal} heal${s.heal>1?'s':''}`:'');const sts=document.createElement('span');sts.className='sts';sts.textContent=`Speed ${Math.round(s.spd*100)} · Health ${s.hp} · Power ${s.pow}`;c.append(f,n,r,ab,sts,e);if(opt.style&&opt.style!=='default'){f.classList.add('fs-'+opt.style);const sb=document.createElement('span');sb.className='stb st-'+opt.style;sb.textContent=opt.style==='gold'?'Gold':opt.style==='diamond'?'Diamond':'Chrome';c.appendChild(sb)}if(opt.champ){const ch=document.createElement('span');ch.className='belt';ch.textContent='Champion';c.appendChild(ch)}if(opt.locked){const lk=document.createElement('span');lk.className='lock';lk.textContent=opt.locked;c.appendChild(lk)}return c}
 
 /* ============ THREE ============ */
 const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
@@ -677,15 +679,19 @@ const texCache={};function headTex(src){if(!texCache[src]){const t=new THREE.Tex
 function bone(m,a,b){_e.subVectors(b,a);const L=_e.length()||1e-4;m.position.copy(a).addScaledVector(_e,.5);m.quaternion.setFromUnitVectors(UP,_e.divideScalar(L));m.scale.set(1,L,1)}
 function ik(A,B,l1,l2,pole,out){const d=_e.subVectors(B,A);const D=d.length()||1e-4;d.divideScalar(D);if(D>=l1+l2-1e-4)return out.copy(A).addScaledVector(d,D*l1/(l1+l2));
   const a=(l1*l1-l2*l2+D*D)/(2*D),h=Math.sqrt(Math.max(0,l1*l1-a*a));const p=_d.copy(pole).addScaledVector(d,-pole.dot(d)).normalize();return out.copy(A).addScaledVector(d,a).addScaledVector(p,h)}
-const STYLES=[{id:'default',name:'Default',need:0},{id:'chrome',name:'Chrome',need:10},{id:'gold',name:'Gold',need:25}];
+const STYLES=[{id:'default',name:'Default',need:0},{id:'chrome',name:'Chrome',need:10},{id:'gold',name:'Gold',need:25},{id:'diamond',name:'Diamond',need:25,online:true}];
 let ENV=null;function envMap(){if(ENV)return ENV;const c=document.createElement('canvas');c.width=512;c.height=256;const x=c.getContext('2d');const gr=x.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#ffffff');gr.addColorStop(.45,'#9aa4b4');gr.addColorStop(.5,'#2a2e36');gr.addColorStop(1,'#0c0e12');x.fillStyle=gr;x.fillRect(0,0,512,256);
   x.fillStyle='rgba(255,255,255,.95)';[[60,40],[200,30],[330,46],[450,36]].forEach(([px,py])=>{x.fillRect(px,py,46,16)});x.fillStyle='rgba(255,220,180,.6)';x.fillRect(0,110,512,6);
   const t=new THREE.CanvasTexture(c);t.mapping=THREE.EquirectangularReflectionMapping;t.encoding=THREE.sRGBEncoding;const pm=new THREE.PMREMGenerator(renderer);ENV=pm.fromEquirectangular(t).texture;pm.dispose();return ENV}
-function styleMat(style,shade){const e=envMap();if(style==='gold')return new THREE.MeshStandardMaterial({color:lin(shade?0xc9962e:0xf0c45a),metalness:1,roughness:shade?.32:.22,envMap:e,envMapIntensity:1.25});
+function styleMat(style,shade){const e=envMap();if(style==='diamond')return new THREE.MeshStandardMaterial({color:lin(shade?0x7fc6f0:0xc6ecff),metalness:.6,roughness:.03,envMap:e,envMapIntensity:3.2,emissive:lin(shade?0x06223a:0x0a2f4a),flatShading:true});if(style==='gold')return new THREE.MeshStandardMaterial({color:lin(shade?0xc9962e:0xf0c45a),metalness:1,roughness:shade?.32:.22,envMap:e,envMapIntensity:1.25});
   return new THREE.MeshStandardMaterial({color:lin(shade?0xc4ccd5:0xf4f7fa),metalness:shade?.7:.62,roughness:shade?.2:.12,envMap:e,envMapIntensity:1.6})}
+let sparkTex=null;function sparkleTex(){if(sparkTex)return sparkTex;const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');const gr=x.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.25,'rgba(200,240,255,.8)');gr.addColorStop(1,'rgba(160,220,255,0)');x.fillStyle=gr;x.fillRect(0,0,64,64);
+  x.fillStyle='#fff';x.beginPath();x.moveTo(32,0);x.lineTo(35,29);x.lineTo(64,32);x.lineTo(35,35);x.lineTo(32,64);x.lineTo(29,35);x.lineTo(0,32);x.lineTo(29,29);x.closePath();x.fill();sparkTex=new THREE.CanvasTexture(c);return sparkTex}
+function addSparkles(g){g.sparks=[];const spots=[[g.torso,[.17,.35,.1]],[g.torso,[.16,.18,-.12]],[g.torso,[.12,.45,-.18]],[g.torso,[.17,.08,.15]],[g.hips,[.16,-.05,.1]],[g.hips,[.16,-.12,-.08]],[g.gl[0],[.06,.06,.05]],[g.gl[1],[.06,.06,-.05]],[g.torso,[-.1,.3,.2]],[g.hips,[-.05,-.1,.16]]];
+  spots.forEach(([par,p],i)=>{const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:sparkleTex(),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));sp.position.set(...p);sp.userData.ph=i*1.7;sp.userData.sp=1.3+(i%4)*.35;sp.scale.setScalar(0);par.add(sp);g.sparks.push(sp)})}
 function makeBoxer(skinIdx,gear,style,hat){gear=validGear(gear)||[0,0];const glove=GLOVES[gear[0]][1];
   const s=SKINS[skinIdx];const M={skin:std(s.tone,.6),tank:std(0x7a1f30,.8),trunk:std(TRUNKS[gear[1]][1],.55),band:std(gear[1]===2?0x1d1d22:0xf4efe6,.6),glove:std(glove,.35,.1),cuff:std(0xf4efe6,.5),shoe:std(0xf6f6f4,.5),sole:std(0x222222,.7)};
-  if(style==='chrome'||style==='gold'){const a=styleMat(style,false),b=styleMat(style,true);Object.keys(M).forEach(k=>{M[k]=(k==='tank'||k==='trunk'||k==='sole'||k==='band')?b:a})}
+  if(style==='chrome'||style==='gold'||style==='diamond'){const a=styleMat(style,false),b=styleMat(style,true);Object.keys(M).forEach(k=>{M[k]=(k==='tank'||k==='trunk'||k==='sole'||k==='band')?b:a})}
   const g={root:new THREE.Group(),skin:skinIdx,style:style||'default'};
   const add=(p,geo,mat,pos,scale)=>{const m=new THREE.Mesh(geo,mat);m.castShadow=true;if(pos)m.position.set(...pos);if(scale)m.scale.set(...scale);p.add(m);return m};
   g.hips=new THREE.Group();g.root.add(g.hips);
@@ -694,13 +700,13 @@ function makeBoxer(skinIdx,gear,style,hat){gear=validGear(gear)||[0,0];const glo
   add(g.torso,new THREE.CylinderGeometry(.24,.19,.52,20),M.tank,[0,.28,0],[.68,1,1]);
   add(g.torso,new THREE.SphereGeometry(.24,20,10,0,PI*2,0,PI/2),M.skin,[0,.52,0],[.66,.35,1]);
   add(g.torso,new THREE.CylinderGeometry(.06,.07,.14,12),M.skin,[0,.62,0]);
-  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:headTex(s.img),transparent:true,alphaTest:.05}));const h=s.w*s.ar;sp.scale.set(s.w,h,1);sp.position.set(.02,s.bodyPic?.03+h/2:.66+h*.43,0);if(style==='gold')sp.material.color.set(0xffe4a6);else if(style==='chrome')sp.material.color.set(0xe6edf5);if(s.bodyPic){g.torso.children.forEach(o=>{if(o!==sp)o.visible=false})}sp.userData.base=sp.position.clone();g.torso.add(sp);g.head=sp;
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:headTex(s.img),transparent:true,alphaTest:.05}));const h=s.w*s.ar;sp.scale.set(s.w,h,1);sp.position.set(.02,s.bodyPic?.03+h/2:.66+h*.43,0);if(style==='gold')sp.material.color.set(0xffe4a6);else if(style==='chrome')sp.material.color.set(0xe6edf5);else if(style==='diamond')sp.material.color.set(0xdcf2ff);if(s.bodyPic){g.torso.children.forEach(o=>{if(o!==sp)o.visible=false})}sp.userData.base=sp.position.clone();g.torso.add(sp);g.head=sp;
   const limb=(rd,rp,mat)=>add(g.root,new THREE.CylinderGeometry(rd,rp,1,12),mat);
   g.ua=[limb(.052,.06,M.skin),limb(.052,.06,M.skin)];g.fa=[limb(.045,.05,M.skin),limb(.045,.05,M.skin)];
   g.gl=[0,1].map(()=>{const gg=new THREE.Group();add(gg,new THREE.SphereGeometry(.105,16,12),M.glove,[0,0,0],[1.25,1,1.05]);add(gg,new THREE.SphereGeometry(.05,10,8),M.glove,[-.02,.05,.08]);add(gg,new THREE.CylinderGeometry(.065,.07,.1,12),M.cuff,[-.13,0,0],null).rotation.z=PI/2;g.root.add(gg);return gg});
   g.th=[limb(.075,.1,M.trunk),limb(.075,.1,M.trunk)];g.sh=[limb(.05,.068,M.skin),limb(.05,.068,M.skin)];
   g.shoe=[0,1].map(()=>{const gg=new THREE.Group();add(gg,new THREE.BoxGeometry(.27,.1,.12),M.shoe,[.05,.02,0]);add(gg,new THREE.CylinderGeometry(.065,.07,.16,10),M.shoe,[-.02,.12,0]);add(gg,new THREE.BoxGeometry(.28,.025,.125),M.sole,[.05,-.035,0]);g.root.add(gg);return gg});
-  scene.add(g.root);return g;
+  if(style==='diamond')addSparkles(g);scene.add(g.root);return g;
 }
 function makeClub(){const g=new THREE.Group();const sh=new THREE.Mesh(new THREE.CylinderGeometry(.008,.011,1,8),std(0xb9bcc2,.3,.9));sh.position.y=.5;g.add(sh);
   const grip=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.26,8),std(0x1b1b1c,.9));grip.position.y=.13;g.add(grip);
@@ -924,6 +930,7 @@ function poseBoxer(g,b,time,winner){
     bone(g.ua[i],el,sh);bone(g.fa[i],hand,el);g.gl[i].position.copy(hand);_t.subVectors(hand,el).normalize();g.gl[i].quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),_t)}
   if(g.paddle&&g.paddle.visible){g.paddle.position.copy(g.gl[0].position);g.paddle.quaternion.copy(g.gl[0].quaternion);const swing=!winner&&b.s==='punch'&&b.p==='pickle';g.paddle.userData.bl.rotation.x=swing?PI/2:(b.side<0?.75:-.75);
     if(g.pball.visible){g.paddle.updateMatrixWorld(true);const c=g.paddle.userData.bl.localToWorld(tmpA.set(.13,0,0));g.root.worldToLocal(c);const P=.62,u=(time%P)/P;g.pball.position.set(c.x,c.y+.07+4*u*(1-u)*.62,c.z);g.pball.rotation.set(time*5,time*3,0)}}
+  if(g.sparks)g.sparks.forEach(sp=>{const v=Math.pow(Math.max(0,Math.sin(time*sp.userData.sp+sp.userData.ph)),10);sp.scale.setScalar(.03+v*.16);sp.material.rotation=time*1.5+sp.userData.ph});
   const step=moving?Math.sin(time*12)*.06:0;
   const feet=[new THREE.Vector3(.27+step,.06,.13),new THREE.Vector3(-.27-step,.06,-.13)];
   if(g._run&&winner){const r=Math.sin(time*14);feet[0].set(.05+.32*r,.06+Math.max(0,-Math.cos(time*14))*.16,.12);feet[1].set(.05-.32*r,.06+Math.max(0,Math.cos(time*14))*.16,-.12)}
@@ -1178,7 +1185,7 @@ const net={room:null,lobby:null,role:null,code:null,peer:null,lastIn:null,pn:0,l
 /* ============ GAME FLOW ============ */
 /* ---------- progress, unlocks, records ---------- */
 const LB={db:null,user:null,uid:null,recs:[],mine:null,names:{},status:'loading',canWrite:null};
-const prog=Object.assign({wins:0,losses:0,kos:0,tourn:0,belts:{},skinW:{},cp:0,hats:[],xp:0},store.get('rr.prog')||{});
+const prog=Object.assign({wins:0,losses:0,kos:0,tourn:0,belts:{},skinW:{},cp:0,hats:[],xp:0,ow:0},store.get('rr.prog')||{});
 function progress(){const m=LB.mine||{};return{wins:Math.max(prog.wins,m.wins|0),tourn:Math.max(prog.tourn,m.tourn|0)}}
 function isUnlocked(i){const u=SKINS[i].unlock;if(!u)return true;const P=progress();return u.wins?P.wins>=u.wins:P.tourn>=u.tourn}
 function lockText(i){const u=SKINS[i].unlock;const P=progress();return u.wins?`Win ${u.wins} fights to unlock (${Math.min(P.wins,u.wins)}/${u.wins})`:'Win a tournament to unlock'}
@@ -1219,9 +1226,9 @@ let myAcc=Object.assign({face:'',neck:'',robe:''},store.get('rr.acc')||{});
 function accOn(){return ACC_SLOTS.map(sl=>{const id=myAcc[sl];const a=accById(id);return a&&a.slot===sl&&ownedHat(id)?id:''})}
 function validAcc(v){return ACC_SLOTS.map((sl,i)=>{const id=Array.isArray(v)?String(v[i]||''):'';const a=accById(id);return a&&a.slot===sl?id:''})}
 function hatOn(){return myHat&&hatById(myHat)&&ownedHat(myHat)?myHat:''}
-function syncWallet(){const m=LB.mine;if(!m)return;if(typeof m.cp==='number')prog.cp=Math.max(0,m.cp|0);if(typeof m.xp==='number')prog.xp=Math.max(prog.xp|0,m.xp|0);if(Array.isArray(m.hats)){const u=new Set([...(prog.hats||[]),...m.hats.filter(x=>itemById(x))]);prog.hats=[...u]}store.set('rr.prog',prog);renderWallet()}
+function syncWallet(){const m=LB.mine;if(!m)return;if(typeof m.cp==='number')prog.cp=Math.max(0,m.cp|0);if(typeof m.xp==='number')prog.xp=Math.max(prog.xp|0,m.xp|0);if(typeof m.ow==='number')prog.ow=Math.max(prog.ow|0,m.ow|0);if(Array.isArray(m.hats)){const u=new Set([...(prog.hats||[]),...m.hats.filter(x=>itemById(x))]);prog.hats=[...u]}store.set('rr.prog',prog);renderWallet()}
 async function saveWallet(){store.set('rr.prog',prog);renderWallet();if(!LB.db||!LB.uid||LB.canWrite===false)return;
-  try{const ref=LB.db.doc('records/'+LB.uid);const snap=await ref.get();const d=Object.assign({name:myName||'Player',wins:0,losses:0,draws:0,kos:0,tourn:0,fastKo:null,skins:{}},snap.exists?snap.data():{});d.cp=prog.cp|0;d.hats=(prog.hats||[]).slice(0,40);d.xp=myXp();d.updated=Date.now();await ref.set(d)}catch(e){}}
+  try{const ref=LB.db.doc('records/'+LB.uid);const snap=await ref.get();const d=Object.assign({name:myName||'Player',wins:0,losses:0,draws:0,kos:0,tourn:0,fastKo:null,skins:{}},snap.exists?snap.data():{});d.cp=prog.cp|0;d.hats=(prog.hats||[]).slice(0,40);d.xp=myXp();d.ow=onlineWins();d.updated=Date.now();await ref.set(d)}catch(e){}}
 function renderWallet(){const t=`${(prog.cp|0).toLocaleString()} combo points`;document.querySelectorAll('.cpBal').forEach(e=>e.textContent=t)}
 const lvNeed=n=>Math.round(100*Math.pow(n,1.5)/10)*10;
 function lvInfo(xp){xp=Math.max(0,xp|0);let L=1,need=lvNeed(1),into=xp;while(into>=need&&L<999){into-=need;L++;need=lvNeed(L)}return{L,into,need}}
@@ -1254,18 +1261,20 @@ function renderDaily(){const el=$('#dlyList');if(!el)return;const {D,st}=dailySt
 setInterval(()=>{if(!$('#menu').hidden)renderDaily()},60000);
 function renderLevel(){const el=$('#lvlBadge');if(!el)return;const I=lvInfo(myXp());el.innerHTML=`<b>Lv ${I.L}</b><i><u style="width:${(I.into/I.need*100).toFixed(1)}%"></u></i><small>${I.into}/${I.need} XP</small>`}
 async function recordResult(r){prog.cp=(prog.cp|0)+(r.cp|0);prog.xp=myXp()+(r.xp|0);// r:{win,draw,ko,koTime,skin,tourWin}
-  prog.skinW=prog.skinW||{};if(r.win){prog.skinW[SKINS[r.skin].name]=(prog.skinW[SKINS[r.skin].name]|0)+1}if(r.win)prog.wins++;else if(!r.draw)prog.losses++;if(r.win&&r.ko)prog.kos++;if(r.tourWin){prog.tourn++;prog.belts[SKINS[r.skin].name]=true}store.set('rr.prog',prog);
+  prog.skinW=prog.skinW||{};if(r.win){prog.skinW[SKINS[r.skin].name]=(prog.skinW[SKINS[r.skin].name]|0)+1}if(r.win)prog.wins++;else if(!r.draw)prog.losses++;if(r.win&&r.online)prog.ow=(prog.ow|0)+1;if(r.win&&r.ko)prog.kos++;if(r.tourWin){prog.tourn++;prog.belts[SKINS[r.skin].name]=true}store.set('rr.prog',prog);
   if(!LB.db||!LB.uid||LB.canWrite===false){renderLB();return}
   try{const ref=LB.db.doc('records/'+LB.uid);const snap=await ref.get();const d=Object.assign({wins:0,losses:0,draws:0,kos:0,tourn:0,fastKo:null,skins:{}},snap.exists?snap.data():{});
     const n=SKINS[r.skin].name;const k=d.skins[n]=Object.assign({w:0,l:0,ko:0},d.skins[n]||{});
     if(r.win){d.wins++;k.w++}else if(r.draw)d.draws++;else{d.losses++;k.l++}
     if(r.win&&r.ko){d.kos++;k.ko++;if(typeof r.koTime==='number'&&(d.fastKo==null||r.koTime<d.fastKo))d.fastKo=Math.round(r.koTime*10)/10}
-    if(r.tourWin){d.tourn++;k.belt=true}d.cp=prog.cp|0;d.xp=prog.xp|0;d.hats=(prog.hats||[]).slice(0,40);if(myName)d.name=myName;d.updated=Date.now();await ref.set(d)}catch(e){}
+    if(r.tourWin){d.tourn++;k.belt=true}d.cp=prog.cp|0;d.xp=prog.xp|0;d.ow=Math.max(d.ow|0,prog.ow|0);d.hats=(prog.hats||[]).slice(0,40);if(myName)d.name=myName;d.updated=Date.now();await ref.set(d)}catch(e){}
   renderLB()}
 
 /* ---------- menus & modes ---------- */
 function skinWins(i){const n=SKINS[i].name;const m=LB.mine&&LB.mine.skins&&LB.mine.skins[n];return Math.max((prog.skinW||{})[n]|0,m?m.w|0:0)}
-function styleOK(i,id){const st=STYLES.find(x=>x.id===id);return !!st&&skinWins(i)>=st.need}
+function onlineWins(){return Math.max(prog.ow|0,(LB.mine&&LB.mine.ow)|0)}
+function styleProg(i,st){return st.online?onlineWins():skinWins(i)}
+function styleOK(i,id){const st=STYLES.find(x=>x.id===id);return !!st&&styleProg(i,st)>=st.need}
 const myStyles=Object.assign({},store.get('rr.styles')||{});
 function styleOf(i){const id=myStyles[SKINS[i].name]||'default';return styleOK(i,id)?id:'default'}
 const game={mode:null,F:null,A:null,B:null,ai:null,net:null,names:['',''],tags:['',''],lastHp:[100,100],epoch:0,seenEv:0,lastPh:null,intro:null,shake:0,slowT:0,slowK:1,tour:null,tut:null};
@@ -1280,8 +1289,8 @@ function putAcc(g,list){if(!g||!Array.isArray(list)||SKINS[g.skin].bodyPic)retur
   if(a.slot==='face'){m.scale.setScalar((S.hs||1)*S.w/.3*1.05);g.torso.add(m);g.faceM=m}else if(a.slot==='neck'){m.position.set(0,.555,0);g.torso.add(m)}else{g.torso.add(m);g.robeM=m}})}
 const _hp1=new THREE.Vector3(),_hq1=new THREE.Quaternion(),_hq2=new THREE.Quaternion();
 function putHat(g,id){if(!g||!id||!hatById(id))return;const S=SKINS[g.skin];const h=makeHat(id);h.scale.setScalar((S.hs||1)*S.w/.3*1.05);g.torso.add(h);g.hatM=h;g.hatId=id}
-function renderStyles(){const el=$('#styleRow');if(!el)return;el.innerHTML='<span class="lbl">Style</span>';const w=skinWins(mySkin);STYLES.forEach(st=>{const b=document.createElement('button');const ok=w>=st.need;b.className='stc st-'+st.id+(ok?'':' lockd');b.setAttribute('aria-pressed',styleOf(mySkin)===st.id);b.textContent=st.name+(ok||!st.need?'':` · ${Math.min(w,st.need)}/${st.need} wins`);b.title=ok?st.name:`Win ${st.need} fights as ${SKINS[mySkin].name} to unlock`;
-  b.onclick=()=>{if(!ok){menuErr(`Win ${st.need} fights as ${SKINS[mySkin].name} to unlock the ${st.name} style (${w}/${st.need}).`);return}myStyles[SKINS[mySkin].name]=st.id;store.set('rr.styles',myStyles);renderStyles();renderSkinGrid(mySkin,pickHandler);showcase()};el.appendChild(b)})}
+function renderStyles(){const el=$('#styleRow');if(!el)return;el.innerHTML='<span class="lbl">Style</span>';STYLES.forEach(st=>{const w=styleProg(mySkin,st);const b=document.createElement('button');const ok=w>=st.need;b.className='stc st-'+st.id+(ok?'':' lockd');b.setAttribute('aria-pressed',styleOf(mySkin)===st.id);b.textContent=st.name+(ok||!st.need?'':` · ${Math.min(w,st.need)}/${st.need} ${st.online?'online ':''}wins`);b.title=ok?st.name:st.online?`Win ${st.need} online matches to unlock (any fighter)`:`Win ${st.need} fights as ${SKINS[mySkin].name} to unlock`;
+  b.onclick=()=>{if(!ok){menuErr(st.online?`Win ${st.need} online matches to unlock the ${st.name} style for every fighter (${w}/${st.need}).`:`Win ${st.need} fights as ${SKINS[mySkin].name} to unlock the ${st.name} style (${w}/${st.need}).`);return}myStyles[SKINS[mySkin].name]=st.id;store.set('rr.styles',myStyles);renderStyles();renderSkinGrid(mySkin,pickHandler);showcase()};el.appendChild(b)})}
 function renderGear(){[['#gearG',GLOVES,0],['#gearT',TRUNKS,1]].forEach(([id,list,k])=>{const el=$(id);el.innerHTML='';list.forEach(([n,c],i)=>{const b=document.createElement('button');b.className='sw';b.style.background='#'+c.toString(16).padStart(6,'0');b.setAttribute('aria-pressed',myGear[k]===i);b.setAttribute('aria-label',(k?'Trunks: ':'Gloves: ')+n);b.title=n;b.onclick=()=>{myGear[k]=i;store.set('rr.gear',myGear);renderGear();showcase()};el.appendChild(b)})})}
 function randomOpp(){// shuffled rotation: everyone once before repeats, never the same opponent twice in a row
   const pool=SKINS.map((_,i)=>i).filter(i=>i!==mySkin);let bag=(store.get('rr.bag')||[]).filter(i=>pool.includes(i));const last=store.get('rr.lastOpp');
@@ -1501,7 +1510,7 @@ function startFight(mode,a,b,tags,gA,gB,ar){
   game.outro=null;$('.topbar').style.opacity='';
   game._gk=null;if(!gA)gA=mode==='guest'?[1,1]:myGear;if(!gB)gB=mode==='local'?p2Gear():mode==='host'?(validGear(net.guestGear)||p2Gear()):mode==='guest'?myGear:randGear(gA);game.gears=[gA,gB];quickStop(true);
   game.mode=mode;soloKeys=mode!=='local';game.tags=tags;input.forEach(I=>{I.l=I.r=I.b=false;I.p=null});
-  const sA=mode==='guest'?(game._sty||[])[0]||'default':styleOf(a);const sB=mode==='host'?(['chrome','gold'].includes(net.guestStyle)?net.guestStyle:'default'):mode==='guest'?(game._sty||[])[1]||'default':'default';game.styles=[sA,sB];
+  const sA=mode==='guest'?(game._sty||[])[0]||'default':styleOf(a);const sB=mode==='host'?(['chrome','gold','diamond'].includes(net.guestStyle)?net.guestStyle:'default'):mode==='guest'?(game._sty||[])[1]||'default':'default';game.styles=[sA,sB];
   const hA=mode==='guest'?(game._hats||[])[0]||'':hatOn();const hB=mode==='host'?(hatById(net.guestHat)?net.guestHat:''):mode==='guest'?(game._hats||[])[1]||'':(mode==='cpu'||mode==='tour')&&Math.random()<.4?HATS[Math.random()*HATS.length|0].id:'';game.hats=[hA,hB];const aA=mode==='guest'?validAcc((game._accs||[])[0]):accOn();const aB=mode==='host'?validAcc(net.guestAcc):mode==='guest'?validAcc((game._accs||[])[1]):(mode==='cpu'||mode==='tour')?ACC_SLOTS.map(sl=>{const L=ACCS.filter(a=>a.slot===sl);return Math.random()<.25?L[Math.random()*L.length|0].id:''}):['','',''];game.accs=[aA,aB];
   setBoxers(a,b,gA,gB,sA,sB,hA,hB,aA,aB);game.F=newFight(a,b);game.ai=(mode==='cpu'||mode==='tour')?makeAI():null;game.lastHp=[SKINS[a].hp,SKINS[b].hp];game.lastPh=null;game.recorded=false;game._dly=null;game._rmMe=false;game.slowT=0;game.shake=0;
   if(mode!=='tut')game.tut=null;$('#tut').hidden=true;
@@ -1533,7 +1542,7 @@ setInterval(()=>{if(game.mode==='host'||game.mode==='guest')rmTick()},250);
 function showResult(){const F=game.F;const youSide=game.mode==='guest'?1:-1;
   const T=game.tour,isTour=game.mode==='tour'&&T,win=F.w===youSide,lastFight=isTour&&T.i===T.ladder.length-1;let unlockMsg='';
   const earned=['cpu','tour','host','guest'].includes(game.mode)?((youSide<0?F.A:F.B).cp|0):0;
-  if(!game.recorded&&['cpu','tour','host','guest'].includes(game.mode)){game.recorded=true;const before=SKINS.map((_,i)=>isUnlocked(i));game._lvB=lvInfo(myXp()).L;const xpR=fightXp(F,youSide,win,F.w===0,F.how==='KO'||F.how==='TKO',isTour&&win&&lastFight);game._xp=xpR;{const me=youSide<0?F.A:F.B,op=youSide<0?F.B:F.A;game._dly=dailyApply({win,ko:F.how==='KO'||F.how==='TKO',rar:SKINS[me.skin].rarity,skin:SKINS[me.skin].name,landed:me.landed|0,best:me.best|0,pwc:me.pwc|0,pdg:me.pdg|0,kd:op.kdTotal|0,online:game.mode==='host'||game.mode==='guest'})}recordResult({xp:xpR.total,cp:earned+(game._dly?game._dly.reward:0),win,draw:F.w===0,ko:F.how==='KO'||F.how==='TKO',koTime:F.el,skin:youSide<0?F.A.skin:F.B.skin,tourWin:isTour&&win&&lastFight});
+  if(!game.recorded&&['cpu','tour','host','guest'].includes(game.mode)){game.recorded=true;const before=SKINS.map((_,i)=>isUnlocked(i));game._lvB=lvInfo(myXp()).L;const xpR=fightXp(F,youSide,win,F.w===0,F.how==='KO'||F.how==='TKO',isTour&&win&&lastFight);game._xp=xpR;{const me=youSide<0?F.A:F.B,op=youSide<0?F.B:F.A;game._dly=dailyApply({win,ko:F.how==='KO'||F.how==='TKO',rar:SKINS[me.skin].rarity,skin:SKINS[me.skin].name,landed:me.landed|0,best:me.best|0,pwc:me.pwc|0,pdg:me.pdg|0,kd:op.kdTotal|0,online:game.mode==='host'||game.mode==='guest'})}recordResult({xp:xpR.total,cp:earned+(game._dly?game._dly.reward:0),win,draw:F.w===0,ko:F.how==='KO'||F.how==='TKO',koTime:F.el,skin:youSide<0?F.A.skin:F.B.skin,tourWin:isTour&&win&&lastFight,online:game.mode==='host'||game.mode==='guest'});
     const fresh=SKINS.filter((_,i)=>!before[i]&&isUnlocked(i)).map(x=>x.name);if(fresh.length)unlockMsg=`New skin unlocked: ${fresh.join(' and ')}!`}
   let title;if(F.w===0)title='Draw';else if(game.mode==='local')title=(F.w<0?'Player 1':'Player 2')+' wins';else title=F.w===youSide?'You win':'You lose';
   $('#resLbl').textContent=F.how==='KO'?'Knockout':F.how==='TKO'?'Technical knockout':F.how==='forfeit'?'Forfeit':'Judges’ decision';$('#resTitle').textContent=title;
@@ -1577,7 +1586,7 @@ function frame(now){const rdt=Math.min(.05,(now-last)/1000);last=now;const dt=rd
         F.ev.forEach(e=>{sfx(e);fx(e);if(e==='hitL'||e==='ko')flash()});
       }
     }else if(game.mode==='guest'){const o=net.other();
-      if(o&&o.presence&&o.presence.g){net.seenAt=now;const P=o.presence.g;const gr=Array.isArray(P.gr)?P.gr:[];if(typeof P.ar==='number'&&ARENAS[P.ar]&&ARENAS[P.ar].id!==game.arena)setArena(ARENAS[P.ar].id);const sty=(Array.isArray(P.sty)?P.sty:[]).map(x=>['chrome','gold'].includes(x)?x:'default');game._sty=sty;const hts=(Array.isArray(P.hats)?P.hats:[]).map(x=>hatById(x)?x:'');game._hats=hts;const acs=Array.isArray(P.acs)?P.acs.map(validAcc):[validAcc(),validAcc()];game._accs=acs;const key=JSON.stringify([P.s,gr,sty,hts,acs]);if(Array.isArray(P.s)&&key!==game._gk){game._gk=key;const a=clamp(P.s[0]|0,0,SKINS.length-1),b=clamp(P.s[1]|0,0,SKINS.length-1);setBoxers(a,b,validGear(gr[0])||[0,0],validGear(gr[1])||myGear,sty[0],sty[1],hts[0],hts[1],acs[0],acs[1]);F.A.skin=a;F.B.skin=b;F.A.max=SKINS[a].hp;F.B.max=SKINS[b].hp;$('#naA').textContent=SKINS[a].name;$('#naB').textContent=SKINS[b].name;buildPads('solo',[b])}const ep=net.unpack(P,F);(o.presence.g.e||[]).forEach(e=>{if(e!==game._lastEv||ep!==game._lastEp){}});
+      if(o&&o.presence&&o.presence.g){net.seenAt=now;const P=o.presence.g;const gr=Array.isArray(P.gr)?P.gr:[];if(typeof P.ar==='number'&&ARENAS[P.ar]&&ARENAS[P.ar].id!==game.arena)setArena(ARENAS[P.ar].id);const sty=(Array.isArray(P.sty)?P.sty:[]).map(x=>['chrome','gold','diamond'].includes(x)?x:'default');game._sty=sty;const hts=(Array.isArray(P.hats)?P.hats:[]).map(x=>hatById(x)?x:'');game._hats=hts;const acs=Array.isArray(P.acs)?P.acs.map(validAcc):[validAcc(),validAcc()];game._accs=acs;const key=JSON.stringify([P.s,gr,sty,hts,acs]);if(Array.isArray(P.s)&&key!==game._gk){game._gk=key;const a=clamp(P.s[0]|0,0,SKINS.length-1),b=clamp(P.s[1]|0,0,SKINS.length-1);setBoxers(a,b,validGear(gr[0])||[0,0],validGear(gr[1])||myGear,sty[0],sty[1],hts[0],hts[1],acs[0],acs[1]);F.A.skin=a;F.B.skin=b;F.A.max=SKINS[a].hp;F.B.max=SKINS[b].hp;$('#naA').textContent=SKINS[a].name;$('#naB').textContent=SKINS[b].name;buildPads('solo',[b])}const ep=net.unpack(P,F);(o.presence.g.e||[]).forEach(e=>{if(e!==game._lastEv||ep!==game._lastEp){}});
         if(ep!==game.epoch&&game.epoch){$('#result').hidden=true;game.recorded=false;game._dly=null;game._xp=null;game._rmMe=false;game.outro=null;$('#lvUpBig').hidden=true}game.epoch=ep;game._rmHost=!!P.rm;
         // derive sounds from hp drops
         [F.A,F.B].forEach((b,k)=>{if(b.hp<game.lastHp[k]-.5){const dd=game.lastHp[k]-b.hp;sfx(dd>5?'crash':dd>3?'hitL':'hitS');if(dd>5)fx('crash')}game.lastHp[k]=b.hp})}
@@ -1654,7 +1663,7 @@ $('#authForm').addEventListener('submit',async e=>{e.preventDefault();const u=$(
   $('#authGo').disabled=true;$('#authGo').textContent=ACC.mode==='signup'?'Creating account…':'Logging in…';
   try{if(ACC.mode==='signup')await ACC.signUp(u,p);else await ACC.logIn(u,p)}catch(x){err.textContent=ACC.msg(x);authMode(ACC.mode);err.textContent=ACC.msg(x)}finally{$('#authGo').disabled=false}});
 function onSignedIn(user){ACC.user=user;ACC.username=String(user.email||'').split('@')[0];$('#authOv').hidden=true;
-  if(store.get('rr.uid')!==user.uid){store.set('rr.uid',user.uid);Object.assign(prog,{wins:0,losses:0,kos:0,tourn:0,belts:{},skinW:{},cp:0,hats:[],xp:0});myHat='';store.set('rr.hat','');store.set('rr.prog',prog);myName='';store.set('rr.name','')}
+  if(store.get('rr.uid')!==user.uid){store.set('rr.uid',user.uid);Object.assign(prog,{wins:0,losses:0,kos:0,tourn:0,belts:{},skinW:{},cp:0,hats:[],xp:0,ow:0});myHat='';store.set('rr.hat','');store.set('rr.prog',prog);myName='';store.set('rr.name','')}
   $('#acctName').textContent=ACC.username;startLB();showNameScreen()}
 function accountsBoot(){if(!ACC.init()){initLB();showMenu();showNameScreen();return}
   $('#acctRow').hidden=false;showMenu();$('#menu').hidden=true;$('#nameOv').hidden=true;$('#authOv').hidden=false;$('#authLoading').hidden=false;$('#authForm').hidden=true;
