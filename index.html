@@ -465,7 +465,14 @@ const RELAY={db:null,ok:null,off:0,FRESH:15000,
     return R}};
 const ONLINE={async ready(){return (await RELAY.ready())||typeof Peer==='function'},
   async join(name,mode){return (await RELAY.ready())?RELAY.join(name,mode):P2P.join(name,mode)}};
-setTimeout(()=>{RELAY.ready()},1200);
+function onlineNews(){const K='rr.news.online1';try{if(localStorage.getItem(K))return}catch(e){}if(document.getElementById('newsPop'))return;
+  const st=document.createElement('style');st.textContent='#newsPop{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:rgba(0,0,0,.55);padding:16px}#newsPop .np{position:relative;max-width:380px;width:100%;background:#16171d;border:1px solid rgba(255,255,255,.14);border-top:4px solid var(--hp,#47d16c);border-radius:16px;padding:24px 22px 20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6);color:var(--text,#f4efe6)}#newsPop h2{margin:0 0 8px;font-family:var(--display,inherit);font-style:italic;font-weight:800;text-transform:uppercase;font-size:30px;line-height:1}#newsPop p{margin:0 0 18px;color:rgba(244,239,230,.75);font-size:15px;line-height:1.45}#newsPop .np-x{position:absolute;top:8px;right:10px;background:none;border:0;color:inherit;font-size:26px;line-height:1;cursor:pointer;padding:6px;opacity:.7}#newsPop .np-x:hover{opacity:1}#newsPop .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--hp,#47d16c);box-shadow:0 0 10px var(--hp,#47d16c);margin-right:8px;vertical-align:middle}';
+  document.head.appendChild(st);const d=document.createElement('div');d.id='newsPop';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','npT');
+  d.innerHTML='<div class="np"><button class="np-x" aria-label="Close">×</button><h2 id="npT"><span class="dot"></span>Online Play is now working</h2><p>Host a match, join with a code, or tap Quick match to fight your friends online.</p><button class="btn primary np-ok" style="font-size:18px">Let’s fight</button></div>';
+  const close=()=>{try{localStorage.setItem(K,'1')}catch(e){}d.remove();removeEventListener('keydown',esc,true)};const esc=e=>{if(e.key==='Escape'){e.stopPropagation();close()}};
+  d.querySelector('.np-x').onclick=close;d.querySelector('.np-ok').onclick=close;d.addEventListener('click',e=>{if(e.target===d)close()});addEventListener('keydown',esc,true);
+  document.body.appendChild(d);d.querySelector('.np-ok').focus()}
+setTimeout(()=>{RELAY.ready().then(ok=>{if(ok)onlineNews()})},1200);
 
 window.FIREBASE_CONFIG={"apiKey": "AIzaSyBVWugSgRC5bNpRpsoUJow7b2SZGi9sbvA", "authDomain": "letters-boxing.firebaseapp.com", "projectId": "letters-boxing", "storageBucket": "letters-boxing.firebasestorage.app", "messagingSenderId": "692812657896", "appId": "1:692812657896:web:590a7d84521c42790a455d", "databaseURL": "https://letters-boxing-default-rtdb.firebaseio.com"};
 
