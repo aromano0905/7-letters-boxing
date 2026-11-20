@@ -474,6 +474,57 @@ function onlineNews(){const K='rr.news.online1';try{if(localStorage.getItem(K))r
   document.body.appendChild(d);d.querySelector('.np-ok').focus()}
 setTimeout(()=>{RELAY.ready().then(ok=>{if(ok)onlineNews()})},1200);
 
+/* ---------- Global chat (Firebase Realtime Database, /chat) ---------- */
+const CHAT={open:false,msgs:[],seen:0,lastSend:0,me:'c'+Math.random().toString(36).slice(2,9),ref:null,cb:null,
+  init(){if(document.getElementById('chatBtn'))return;
+    const st=document.createElement('style');st.textContent=`
+#chatBtn{position:fixed;right:16px;bottom:16px;z-index:9000;width:56px;height:56px;border-radius:50%;border:0;cursor:pointer;background:var(--maroon,#7a1f30);color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.5),inset 0 0 0 2px rgba(255,255,255,.15);display:grid;place-items:center;transition:transform .15s}
+#chatBtn:hover{transform:scale(1.06)}#chatBtn svg{width:28px;height:28px}
+#chatBtn .cnt{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--gold,#f2c230);color:#2a1d00;font:700 12px/20px system-ui,sans-serif;text-align:center}
+#chatBox{position:fixed;right:16px;bottom:84px;z-index:9000;width:min(340px,calc(100vw - 32px));height:min(440px,calc(100dvh - 120px));display:flex;flex-direction:column;background:#16171d;border:1px solid rgba(255,255,255,.14);border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.6);color:var(--text,#f4efe6);overflow:hidden}
+#chatBox header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 10px 14px;border-bottom:1px solid rgba(255,255,255,.1);font-family:var(--display,inherit);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:14px}
+#chatBox header button{background:none;border:0;color:inherit;font-size:22px;line-height:1;cursor:pointer;opacity:.7;padding:2px 6px}#chatBox header button:hover{opacity:1}
+#chatList{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;overscroll-behavior:contain;scrollbar-width:thin}
+#chatList .m{font-size:14px;line-height:1.35;word-wrap:break-word;overflow-wrap:anywhere}#chatList .m b{color:var(--gold,#f2c230);margin-right:6px}#chatList .m.mine b{color:var(--hp,#47d16c)}
+#chatList .m time{display:block;font-size:11px;color:rgba(244,239,230,.45)}#chatList .empty{margin:auto;color:rgba(244,239,230,.5);font-size:14px;text-align:center}
+#chatForm{display:flex;gap:8px;padding:10px;border-top:1px solid rgba(255,255,255,.1)}
+#chatIn{flex:1;min-width:0;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:9px 11px;color:inherit;font:inherit;font-size:16px}
+#chatForm button{border:0;border-radius:10px;padding:0 14px;background:var(--maroon,#7a1f30);color:#fff;font-weight:700;cursor:pointer}#chatForm button:disabled{opacity:.5;cursor:default}
+#chatErr{font-size:12px;color:#ff8a8a;padding:0 12px 8px;min-height:0}`;
+    document.head.appendChild(st);
+    const b=document.createElement('button');b.id='chatBtn';b.setAttribute('aria-label','Open chat');b.setAttribute('aria-expanded','false');
+    b.innerHTML='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3C6.5 3 2 6.8 2 11.5c0 2.3 1.1 4.4 2.9 5.9L4 21l4.2-2.1c1.2.4 2.5.6 3.8.6 5.5 0 10-3.8 10-8.5S17.5 3 12 3z"/></svg><span class="cnt" hidden></span>';
+    const box=document.createElement('section');box.id='chatBox';box.hidden=true;box.setAttribute('aria-label','Chat');
+    box.innerHTML='<header><span>Chat · everyone</span><button type="button" aria-label="Close chat">×</button></header><div id="chatList" aria-live="polite"><p class="empty">Loading…</p></div><div id="chatErr"></div><form id="chatForm" autocomplete="off"><input id="chatIn" maxlength="200" placeholder="Say something…" aria-label="Message"><button type="submit">Send</button></form>';
+    document.body.append(box,b);
+    b.onclick=()=>this.toggle();box.querySelector('header button').onclick=()=>this.toggle(false);
+    box.querySelector('#chatForm').onsubmit=e=>{e.preventDefault();this.send()};
+    const inp=box.querySelector('#chatIn');['keydown','keyup','keypress'].forEach(t=>inp.addEventListener(t,e=>{e.stopPropagation();if(t==='keydown'&&e.key==='Escape')this.toggle(false)}));
+    this.listen();setInterval(()=>this.vis(),400)},
+  listen(){const db=RELAY.db;this.ref=db.ref('chat').limitToLast(60);
+    this.cb=s=>{const v=s.val()||{};this.msgs=Object.keys(v).sort().map(k=>Object.assign({k},v[k])).filter(m=>m&&typeof m.m==='string'&&typeof m.n==='string');this.render()};
+    this.ref.on('value',this.cb,()=>{this.err('Chat is unavailable right now.')})},
+  name(){const w=document.getElementById('whoName');const t=(w&&w.textContent||'').replace(/\s+/g,' ').trim();return t&&t!=='—'?t:'Player'},
+  lv(){const b=document.querySelector('#lvlBadge b');const m=b&&/(\d+)/.exec(b.textContent);return m?+m[1]:0},
+  vis(){const hud=document.getElementById('hud'),res=document.getElementById('result');const fighting=hud&&!hud.hidden&&!(res&&!res.hidden);
+    const b=document.getElementById('chatBtn'),box=document.getElementById('chatBox');b.hidden=fighting;if(fighting&&!box.hidden)this.toggle(false)},
+  toggle(on){const box=document.getElementById('chatBox'),b=document.getElementById('chatBtn');this.open=on===undefined?box.hidden:on;box.hidden=!this.open;b.setAttribute('aria-expanded',String(this.open));
+    if(this.open){this.seen=this.msgs.length?this.msgs[this.msgs.length-1].k:this.seen;this.render();setTimeout(()=>{const l=document.getElementById('chatList');l.scrollTop=l.scrollHeight;document.getElementById('chatIn').focus()},0)}this.badge()},
+  badge(){const c=document.querySelector('#chatBtn .cnt');const n=this.open?0:this.msgs.filter(m=>m.k>(this.seen||'')&&m.u!==this.me).length;c.hidden=!n;c.textContent=n>9?'9+':String(n)},
+  err(t){const e=document.getElementById('chatErr');if(e){e.textContent=t||'';if(t)setTimeout(()=>{if(e.textContent===t)e.textContent=''},3500)}},
+  fmt(t){const d=new Date(+t||0);if(!t)return'';const now=new Date();const hm=d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});return d.toDateString()===now.toDateString()?hm:d.toLocaleDateString([],{month:'short',day:'numeric'})+' · '+hm},
+  render(){const l=document.getElementById('chatList');if(!l)return;const atBottom=l.scrollHeight-l.scrollTop-l.clientHeight<40;l.textContent='';
+    if(!this.msgs.length){const p=document.createElement('p');p.className='empty';p.textContent='No messages yet. Say hi!';l.appendChild(p)}
+    for(const m of this.msgs){const d=document.createElement('div');d.className='m'+(m.u===this.me?' mine':'');const b=document.createElement('b');b.textContent=m.n+(m.l>0?' · Lv '+(m.l|0):'');
+      const tm=document.createElement('time');tm.textContent=this.fmt(m.t);d.append(tm,b,document.createTextNode(m.m));l.appendChild(d)}
+    if(atBottom||this.open)l.scrollTop=l.scrollHeight;if(this.open&&this.msgs.length)this.seen=this.msgs[this.msgs.length-1].k;this.badge()},
+  async send(){const inp=document.getElementById('chatIn');const m=inp.value.replace(/\s+/g,' ').trim().slice(0,200);if(!m)return;
+    const now=Date.now();if(now-this.lastSend<2000)return this.err('Slow down a little.');this.lastSend=now;
+    const btn=document.querySelector('#chatForm button');btn.disabled=true;
+    try{await RELAY.db.ref('chat').push({n:this.name().slice(0,20),m,u:this.me,l:Math.min(999,this.lv()),t:window.firebase&&firebase.database&&!window.__RTDB_MOCK?firebase.database.ServerValue.TIMESTAMP:Date.now()});inp.value='';this.err('')}
+    catch(e){this.err('Couldn’t send. Try again.')}btn.disabled=false;inp.focus()}};
+setTimeout(()=>{RELAY.ready().then(ok=>{if(ok)CHAT.init()})},1300);
+
 window.FIREBASE_CONFIG={"apiKey": "AIzaSyBVWugSgRC5bNpRpsoUJow7b2SZGi9sbvA", "authDomain": "letters-boxing.firebaseapp.com", "projectId": "letters-boxing", "storageBucket": "letters-boxing.firebasestorage.app", "messagingSenderId": "692812657896", "appId": "1:692812657896:web:590a7d84521c42790a455d", "databaseURL": "https://letters-boxing-default-rtdb.firebaseio.com"};
 
 (()=>{
