@@ -162,6 +162,10 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
 .pf-st{font-size:11px;font-weight:700;border-radius:4px;padding:1px 6px;white-space:nowrap}
 .pf-st.on.st-gold{background:linear-gradient(90deg,#f2c230,#fff3a6);color:#3a2600}.pf-st.on.st-chrome{background:linear-gradient(90deg,#c9d1da,#fff);color:#1a1d22}.pf-st.off{color:var(--muted);border:1px solid var(--line)}
 #pwMsg.ok{color:#6be38a}
+.shoprow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.shoprow .lbl{min-width:56px}
+.btn.shopbig{font-size:19px;padding:11px 22px;background:linear-gradient(160deg,#f2c230,#c98a0b);color:#2a1a00;border-color:#f7d77c;font-weight:800}
+.btn.shopbig:hover{filter:brightness(1.08)}
 .cpPill{display:inline-block;margin-left:8px;font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--gold);background:rgba(242,194,48,.12);border:1px solid rgba(242,194,48,.4);border-radius:999px;padding:3px 10px}
 .hcard{display:grid;gap:4px;justify-items:center;padding:10px 8px 12px;border-radius:12px;border:2px solid var(--line);background:rgba(255,255,255,.05);text-align:center}
 .hcard img{width:110px;height:110px;object-fit:contain}
@@ -252,12 +256,13 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
 
 <div class="ov" id="menu" hidden>
   <div class="wrap">
-    <div class="title"><h1>7 Letters<br>Boxing</h1><p class="who"><span id="acctRow" hidden>Account <b id="acctName" style="font-size:16px"></b> <button class="btn" id="logoutBtn" style="padding:4px 10px;font-size:13px;margin:0 10px 0 4px">Log out</button></span>Fighting as <b id="whoName"></b> <button class="btn" id="nameChange" style="padding:4px 10px;font-size:13px;margin-left:6px">Change name</button><button class="btn" id="shopBtn" style="padding:4px 12px;font-size:13px;margin-left:6px">Hat Shop</button><span class="cpBal cpPill"></span><button class="btn primary" id="profileBtn" style="padding:4px 12px;font-size:13px;margin-left:6px">Profile</button></p><p>Pick your skin, step into the ring. Three rounds, sixty seconds each. Knock them out or win on points.</p></div>
+    <div class="title"><h1>7 Letters<br>Boxing</h1><p class="who"><span id="acctRow" hidden>Account <b id="acctName" style="font-size:16px"></b> <button class="btn" id="logoutBtn" style="padding:4px 10px;font-size:13px;margin:0 10px 0 4px">Log out</button></span>Fighting as <b id="whoName"></b> <button class="btn" id="nameChange" style="padding:4px 10px;font-size:13px;margin-left:6px">Change name</button><button class="btn primary" id="profileBtn" style="padding:4px 12px;font-size:13px;margin-left:6px">Profile</button></p><p>Pick your skin, step into the ring. Three rounds, sixty seconds each. Knock them out or win on points.</p></div>
     <section style="display:grid;gap:10px">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div class="lbl" id="pickLbl">Choose your skin</div><button class="btn" id="pickBack" hidden style="padding:4px 12px;font-size:13px">Back</button></div>
       <div class="grid" id="skinGrid"></div>
       <div class="gear"><div class="gearrow"><span class="lbl">Gloves</span><div class="sws" id="gearG" role="group" aria-label="Glove color"></div></div><div class="gearrow"><span class="lbl">Trunks</span><div class="sws" id="gearT" role="group" aria-label="Trunks color"></div></div></div>
       <div class="diff" id="styleRow" role="group" aria-label="Fighter style"></div>
+      <div class="shoprow"><span class="lbl">Hat</span><button class="btn shopbig" id="shopBtn">Hat Shop</button><span class="cpBal cpPill"></span></div>
     </section>
     <section style="display:grid;gap:10px">
       <div class="lbl">Choose a fight</div>
