@@ -296,8 +296,7 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
     </section>
     <section style="display:grid;gap:10px">
       <div class="lbl">Records</div>
-      <p class="status" id="myRec"></p>
-      <div><span class="lvl" id="lvlBadge"></span></div>
+      <div class="recrow"><span class="lvl" id="lvlBadge"></span><p class="status" id="myRec"></p></div>
       <div class="recs"><div class="tbl" id="lbPlayers"><p class="status">Loading records…</p></div><div class="tbl" id="lbSkins"></div></div>
       <p class="status" id="lbNote"></p>
     </section>
@@ -953,7 +952,7 @@ let mySkin=clamp(store.get('rr.skin')??0,0,SKINS.length-1);if(!isUnlocked(mySkin
 const fmtT=s=>s==null?'—':(s>=60?Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'):s.toFixed(1)+'s');
 async function initLB(){LB.status='off';renderLB()}
 function renderLB(){const P=progress();const mr=$('#myRec');
-  const LI=lvInfo(myXp());mr.textContent=`Your record: Level ${LI.L} (${LI.into}/${LI.need} XP) · ${Math.max(prog.wins,LB.mine?LB.mine.wins|0:0)} wins · ${Math.max(prog.losses,LB.mine?LB.mine.losses|0:0)} losses · ${Math.max(prog.kos,LB.mine?LB.mine.kos|0:0)} KOs · ${P.tourn} tournament${P.tourn===1?'':'s'} won.`;
+  mr.textContent=`Your record: ${Math.max(prog.wins,LB.mine?LB.mine.wins|0:0)} wins · ${Math.max(prog.losses,LB.mine?LB.mine.losses|0:0)} losses · ${Math.max(prog.kos,LB.mine?LB.mine.kos|0:0)} KOs · ${P.tourn} tournament${P.tourn===1?'':'s'} won.`;
   const pl=$('#lbPlayers'),sk=$('#lbSkins'),note=$('#lbNote');
   if(LB.status==='loading'){pl.innerHTML='<p class="status">Loading records…</p>';return}
   if(LB.status==='off'){pl.innerHTML='<p class="status">'+(ACC.on?'Log in to save your record and appear on the leaderboard.':'Your record, unlocks and gear are saved on this device.')+'</p>';sk.innerHTML='';note.textContent='';return}
