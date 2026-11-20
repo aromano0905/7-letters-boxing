@@ -269,7 +269,7 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
       <div class="recs"><div class="tbl" id="lbPlayers"><p class="status">Loading records…</p></div><div class="tbl" id="lbSkins"></div></div>
       <p class="status" id="lbNote"></p>
     </section>
-    <p class="howto"><b>Controls.</b> Dodge <span class="kbd">O</span> or <span class="kbd">Space</span> (P2 <span class="kbd">0</span>): time it as a punch comes in to make it miss, then hit back for 1.6× damage. Move <span class="kbd">A</span><span class="kbd">D</span>, block <span class="kbd">S</span> (hold), jab <span class="kbd">J</span>, hook <span class="kbd">K</span>, uppercut <span class="kbd">L</span>. Player 2 on the same keyboard: move <span class="kbd">←</span><span class="kbd">→</span>, block <span class="kbd">↓</span>, jab/hook/uppercut <span class="kbd">1</span><span class="kbd">2</span><span class="kbd">3</span> (or <span class="kbd">,</span><span class="kbd">.</span><span class="kbd">/</span>). Power move <span class="kbd">I</span> (P2 <span class="kbd">4</span>), heal for Andrew and Bob <span class="kbd">U</span> (P2 <span class="kbd">5</span>). On a phone, use the buttons. Land hits back to back for combo bonus damage. Get knocked down and you mash punch to beat the ten-count; three knockdowns in a round is a TKO. Every skin has its own speed, health and power move; landed hits charge it, and power moves go straight through blocks. Punches cost stamina; a tired boxer hits softer.</p>
+    <p class="howto"><b>Controls.</b> Dodge <span class="kbd">O</span> or <span class="kbd">Space</span> (P2 <span class="kbd">0</span>): time it as a punch comes in to make it miss, then hit back for 1.6× damage. Move <span class="kbd">A</span><span class="kbd">D</span>, block <span class="kbd">S</span> (hold), jab <span class="kbd">J</span>, hook <span class="kbd">K</span>, uppercut <span class="kbd">L</span>. Player 2 on the same keyboard: move <span class="kbd">←</span><span class="kbd">→</span>, block <span class="kbd">↓</span>, jab/hook/uppercut <span class="kbd">1</span><span class="kbd">2</span><span class="kbd">3</span> (or <span class="kbd">,</span><span class="kbd">.</span><span class="kbd">/</span>). Power move <span class="kbd">I</span> (P2 <span class="kbd">4</span>). On a phone, use the buttons. Land hits back to back for combo bonus damage. Get knocked down and you mash punch to beat the ten-count; three knockdowns in a round is a TKO. Every skin has its own speed, health and power move; landed hits charge it, and power moves go straight through blocks. Punches cost stamina; a tired boxer hits softer.</p>
   </div>
 </div>
 
@@ -394,14 +394,14 @@ const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){retu
 
 /* ============ SKINS ============ */
 const SKINS=[
-  {name:'Andrew',rarity:'Mythic',img:HEADS.ANDREW,ar:2.0,w:.23,tone:0xd09a8e,spd:1.3,hp:90,heal:1,pw:{k:'power_punch',every:15,name:'Golf club swing'}},
-  {name:'Bob',rarity:'Uncommon',img:HEADS.BOB,ar:1.375,w:.31,tone:0xd8a58a,spd:.87,hp:80,heal:2,pw:{k:'power_upper',every:10,name:'Power uppercut'}},
+  {name:'Andrew',rarity:'Mythic',img:HEADS.ANDREW,ar:2.0,w:.23,tone:0xd09a8e,spd:1.3,hp:90,pw:{k:'power_punch',every:15,name:'Golf club swing'}},
+  {name:'Bob',rarity:'Uncommon',img:HEADS.BOB,ar:1.375,w:.31,tone:0xd8a58a,spd:.87,hp:80,pw:{k:'power_upper',every:10,name:'Power uppercut'}},
   {name:'Tony',rarity:'Magnolia Mythic',img:HEADS.TONY,ar:1.15,w:.35,tone:0xb98466,spd:1.15,hp:100,pw:{k:'pudding',every:20,name:'Banana pudding',dmg:8}},
   {name:'Alex',rarity:'Legendary',img:HEADS.ALEX,ar:1.18,w:.32,tone:0xdba48c,spd:.93,hp:100,pw:{k:'talk',every:15,name:'Dirty talk'}},
   {name:'Liam',rarity:'Legendary',img:HEADS.LIAM,ar:1.47,w:.3,tone:0xe2b298,spd:.9,hp:120,pw:{k:'bmw',every:25,name:'BMW X5',dmg:10}},
   {name:'Coptic John',rarity:'Common',img:HEADS.JOHN,ar:1.27,w:.32,tone:0x9a6a4f,spd:.75,hp:130,pw:{k:'tesla',every:20,name:'Tesla Model Y',dmg:8}},
   {name:'Surace',rarity:'Epic',img:HEADS.SURACE,ar:1.4,w:.3,tone:0xe0aa8a,spd:1.12,hp:95,pw:{k:'suplex',every:12,name:'Suplex'}},
-  {name:'Lmoney',rarity:'Epic',img:HEADS.LMONEY,ar:1.19,w:.32,tone:0xe8b496,spd:1,hp:100,heal:1,pw:{k:'basketball',every:15,name:'Basketball',dmg:6}},
+  {name:'Lmoney',rarity:'Epic',img:HEADS.LMONEY,ar:1.19,w:.32,tone:0xe8b496,spd:1,hp:100,pw:{k:'basketball',every:15,name:'Basketball',dmg:6}},
   {name:'Besian',rarity:'Legendary',img:HEADS.BESIAN,ar:1.25,w:.31,tone:0xd9a382,spd:1.1,hp:96,pw:{k:'stock',every:20,name:'Stock market',dmg:8}},
   {name:'Dom',rarity:'Rare',img:HEADS.DOM,ar:1.09,w:.36,tone:0xe0aa90,spd:1,hp:85,pw:{k:'ankle',every:20,name:'Ankle biter',dmg:25}},
   {name:'Moloney',rarity:'Rare',img:HEADS.MOLONEY,ar:1.3,w:.3,tone:0xe8b49a,spd:.85,hp:115,pw:{k:'headbutt',every:20,name:'Brain damage'}},
