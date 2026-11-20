@@ -271,7 +271,7 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
 
 <div class="ov" id="menu" hidden>
   <div class="wrap">
-    <div class="title"><h1>7 Letters<br>Boxing</h1><p class="who"><span class="lvl" id="lvlBadge"></span><span id="acctRow" hidden>Account <b id="acctName" style="font-size:16px"></b> <button class="btn" id="logoutBtn" style="padding:4px 10px;font-size:13px;margin:0 10px 0 4px">Log out</button></span>Fighting as <b id="whoName"></b> <button class="btn" id="nameChange" style="padding:4px 10px;font-size:13px;margin-left:6px">Change name</button><button class="btn primary" id="profileBtn" style="padding:4px 12px;font-size:13px;margin-left:6px">Profile</button></p><p>Pick your skin, step into the ring. Three rounds, sixty seconds each. Knock them out or win on points.</p></div>
+    <div class="title"><h1>7 Letters<br>Boxing</h1><p class="who"><span id="acctRow" hidden>Account <b id="acctName" style="font-size:16px"></b> <button class="btn" id="logoutBtn" style="padding:4px 10px;font-size:13px;margin:0 10px 0 4px">Log out</button></span>Fighting as <b id="whoName"></b> <button class="btn" id="nameChange" style="padding:4px 10px;font-size:13px;margin-left:6px">Change name</button><button class="btn primary" id="profileBtn" style="padding:4px 12px;font-size:13px;margin-left:6px">Profile</button></p><p>Pick your skin, step into the ring. Three rounds, sixty seconds each. Knock them out or win on points.</p></div>
     <section style="display:grid;gap:10px">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div class="lbl" id="pickLbl">Choose your skin</div><button class="btn" id="pickBack" hidden style="padding:4px 12px;font-size:13px">Back</button></div>
       <div class="grid" id="skinGrid"></div>
@@ -297,6 +297,7 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
     <section style="display:grid;gap:10px">
       <div class="lbl">Records</div>
       <p class="status" id="myRec"></p>
+      <div><span class="lvl" id="lvlBadge"></span></div>
       <div class="recs"><div class="tbl" id="lbPlayers"><p class="status">Loading records…</p></div><div class="tbl" id="lbSkins"></div></div>
       <p class="status" id="lbNote"></p>
     </section>
