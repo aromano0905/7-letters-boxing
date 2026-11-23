@@ -186,6 +186,7 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
 .dly .ch.done{border-color:rgba(71,209,108,.5)}.dly .ch.done i u{background:var(--hp)}.dly .ch.done .rw span{color:var(--hp);font-weight:700}
 .shopsec{margin:18px 0 10px;font-size:13px}.shopsec:first-child{margin-top:4px}.shopsec small{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)}
 .rmst{flex-basis:100%;margin:4px 0 0;text-align:center;min-height:1.2em;color:var(--gold)}#rmBtn.pulse{animation:rmp 1s ease-in-out infinite}@keyframes rmp{50%{box-shadow:0 0 0 6px rgba(242,194,48,.35)}}@media (prefers-reduced-motion:reduce){#rmBtn.pulse{animation:none}}
+.tokban{display:flex;align-items:center;gap:14px;padding:12px 16px;margin-bottom:8px;border-radius:14px;background:linear-gradient(90deg,rgba(242,194,48,.22),rgba(242,194,48,.05));border:1px solid rgba(242,194,48,.55)}.tokban img{width:54px;height:54px}.tokban b{display:block;color:var(--gold);font-size:17px}.tokban span{font-size:14px;color:var(--muted)}
 .recrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .lvbig{display:grid;justify-items:center;gap:2px;padding:10px 26px;border-radius:14px;background:linear-gradient(160deg,#fff3a6,#f2c230 45%,#c98a0b);color:#2a1a00;box-shadow:0 0 40px rgba(242,194,48,.55);animation:lvpop .6s cubic-bezier(.2,1.6,.4,1)}
 .lvbig b{font-family:var(--display);font-style:italic;font-weight:800;font-size:clamp(40px,9vw,64px);line-height:.9;text-transform:uppercase}
@@ -490,7 +491,8 @@ function newsPop(K,title,text,btn,onBtn,img){return new Promise(done=>{try{if(lo
 setTimeout(()=>{RELAY.ready().then(async ok=>{if(ok){await newsPop('rr.news.online1','Online Play is now working','Host a match, join with a code, or tap Quick match to fight your friends online.','Let’s fight');
   if(typeof CHAT!=='undefined'){CHAT.init();await newsPop('rr.news.chat1','New: Chat','Tap the chat bubble in the bottom-right corner to talk with everyone playing 7 Letters Boxing.','Open chat',()=>CHAT.toggle(true))}}
   await newsPop('rr.news.ptony1','New Special Edition: Pickleball Tony','The fastest fighter in the game (speed 150, power 120, health 95). He smashes pickleballs at his opponents with his paddle. Win 75 fights to unlock him.','Nice',null,(typeof HEADS!=='undefined'&&HEADS.PTONY)||'');
-  await newsPop('rr.news.sandrew1','New Special Edition: Super Andrew','Speed 145, power 125, health 100. His Drake method stuns opponents for 3.5 seconds while the music plays. Win 150 fights to unlock him.','Let’s go',null,(typeof HEADS!=='undefined'&&HEADS.SANDREW)||'')})},1200);
+  await newsPop('rr.news.sandrew1','New Special Edition: Super Andrew','Speed 145, power 125, health 100. His Drake method stuns opponents for 3.5 seconds while the music plays. Win 150 fights to unlock him.','Let’s go',null,(typeof HEADS!=='undefined'&&HEADS.SANDREW)||'');
+  await newsPop('rr.news.token1','New: The 7 Letters Token','The rarest drop in the game. Every win has a tiny chance to drop it (better odds online). Find it and the entire Shop is yours for free, forever.','Go win some',null,(typeof window.tokenImg==='function')?window.tokenImg():'')})},1200);
 
 /* ---------- Global chat (Firebase Realtime Database, /chat) ---------- */
 const CHAT={open:false,msgs:[],seen:(()=>{try{return localStorage.getItem('rr.chat.seen')}catch(e){return null}})(),loaded:false,lastN:0,title:document.title,lastSend:0,me:'c'+Math.random().toString(36).slice(2,9),ref:null,cb:null,
@@ -1219,7 +1221,7 @@ const net={room:null,lobby:null,role:null,code:null,peer:null,lastIn:null,pn:0,l
 /* ============ GAME FLOW ============ */
 /* ---------- progress, unlocks, records ---------- */
 const LB={db:null,user:null,uid:null,recs:[],mine:null,names:{},status:'loading',canWrite:null};
-const prog=Object.assign({wins:0,losses:0,kos:0,tourn:0,belts:{},skinW:{},cp:0,hats:[],xp:0,ow:0},store.get('rr.prog')||{});
+const prog=Object.assign({wins:0,losses:0,kos:0,tourn:0,belts:{},skinW:{},cp:0,hats:[],xp:0,ow:0,tok:false},store.get('rr.prog')||{});
 function progress(){const m=LB.mine||{};return{wins:Math.max(prog.wins,m.wins|0),tourn:Math.max(prog.tourn,m.tourn|0)}}
 function isUnlocked(i){const u=SKINS[i].unlock;if(!u)return true;const P=progress();return u.wins?P.wins>=u.wins:P.tourn>=u.tourn}
 function lockText(i){const u=SKINS[i].unlock;const P=progress();return u.wins?`Win ${u.wins} fights to unlock (${Math.min(P.wins,u.wins)}/${u.wins})`:'Win a tournament to unlock'}
@@ -1255,15 +1257,26 @@ function renderLB(){const P=progress();const mr=$('#myRec');
   sk.innerHTML='<table><thead><tr><th class="nm">Skin</th><th>Wins</th><th>Win %</th><th>KOs</th></tr></thead><tbody>'+agg.map(a=>`<tr><td class="nm">${esc(a.n)}</td><td>${a.w}</td><td>${a.w+a.l?Math.round(a.w/(a.w+a.l)*100)+'%':'—'}</td><td>${a.ko}</td></tr>`).join('')+'</tbody></table>';
   note.textContent=LB.canWrite===false?'You can view the board, but saving your results needs Contributor access from the owner.':'Wins against the CPU, tournament fights and online matches count. Your row is highlighted.'}
 let myHat=(()=>{const h=store.get('rr.hat');return typeof h==='string'?h:''})();
-function ownedHat(id){return (prog.hats||[]).includes(id)}
+function hasToken(){return !!(prog.tok||(LB.mine&&LB.mine.tok))}
+function ownedHat(id){return hasToken()||(prog.hats||[]).includes(id)}
+const TOKEN_ODDS={win:1/500,online:1/250};let _tokImg=null;
+function tokenImg(){if(_tokImg)return _tokImg;const c=document.createElement('canvas');c.width=c.height=320;const x=c.getContext('2d');const g=x.createRadialGradient(130,120,20,160,160,160);g.addColorStop(0,'#fff6c8');g.addColorStop(.45,'#f2c230');g.addColorStop(1,'#a8740c');
+  x.fillStyle=g;x.beginPath();x.arc(160,160,150,0,Math.PI*2);x.fill();x.lineWidth=10;x.strokeStyle='#7a4f05';x.stroke();x.lineWidth=4;x.strokeStyle='rgba(255,245,200,.8)';x.beginPath();x.arc(160,160,124,0,Math.PI*2);x.stroke();
+  x.fillStyle='#7a1f30';x.font='italic 900 170px Arial';x.textAlign='center';x.textBaseline='middle';x.fillText('7',160,150);x.font='800 30px Arial';x.fillStyle='#5a3a04';
+  x.fillText('LETTERS',160,248);
+  _tokImg=c.toDataURL('image/png');return _tokImg}
+window.tokenImg=()=>tokenImg();
+function tokenReveal(){sfx('rise');setTimeout(()=>sfx('combo'),250);const go=()=>{showMenu();showShop()};
+  if(typeof newsPop==='function'){try{localStorage.removeItem('rr.tok.got')}catch(e){}newsPop('rr.tok.got','You found the 7 Letters Token!','Ultra rare drop. Everything in the Shop is now yours for free, forever, including future items.','Open Shop',go,tokenImg())}
+  else announce('7 Letters Token!','The whole Shop is free',2600)}
 let myAcc=Object.assign({face:'',neck:'',robe:''},store.get('rr.acc')||{});
 function accOn(){return ACC_SLOTS.map(sl=>{const id=myAcc[sl];const a=accById(id);return a&&a.slot===sl&&ownedHat(id)?id:''})}
 function validAcc(v){return ACC_SLOTS.map((sl,i)=>{const id=Array.isArray(v)?String(v[i]||''):'';const a=accById(id);return a&&a.slot===sl?id:''})}
 function hatOn(){return myHat&&hatById(myHat)&&ownedHat(myHat)?myHat:''}
-function syncWallet(){const m=LB.mine;if(!m)return;if(typeof m.cp==='number')prog.cp=Math.max(0,m.cp|0);if(typeof m.xp==='number')prog.xp=Math.max(prog.xp|0,m.xp|0);if(typeof m.ow==='number')prog.ow=Math.max(prog.ow|0,m.ow|0);if(Array.isArray(m.hats)){const u=new Set([...(prog.hats||[]),...m.hats.filter(x=>itemById(x))]);prog.hats=[...u]}store.set('rr.prog',prog);renderWallet()}
+function syncWallet(){const m=LB.mine;if(!m)return;if(typeof m.cp==='number')prog.cp=Math.max(0,m.cp|0);if(typeof m.xp==='number')prog.xp=Math.max(prog.xp|0,m.xp|0);if(typeof m.ow==='number')prog.ow=Math.max(prog.ow|0,m.ow|0);if(m.tok===true)prog.tok=true;if(Array.isArray(m.hats)){const u=new Set([...(prog.hats||[]),...m.hats.filter(x=>itemById(x))]);prog.hats=[...u]}store.set('rr.prog',prog);renderWallet()}
 async function saveWallet(){store.set('rr.prog',prog);renderWallet();if(!LB.db||!LB.uid||LB.canWrite===false)return;
-  try{const ref=LB.db.doc('records/'+LB.uid);const snap=await ref.get();const d=Object.assign({name:myName||'Player',wins:0,losses:0,draws:0,kos:0,tourn:0,fastKo:null,skins:{}},snap.exists?snap.data():{});d.cp=prog.cp|0;d.hats=(prog.hats||[]).slice(0,40);d.xp=myXp();d.ow=onlineWins();d.updated=Date.now();await ref.set(d)}catch(e){}}
-function renderWallet(){const t=`${(prog.cp|0).toLocaleString()} combo points`;document.querySelectorAll('.cpBal').forEach(e=>e.textContent=t)}
+  try{const ref=LB.db.doc('records/'+LB.uid);const snap=await ref.get();const d=Object.assign({name:myName||'Player',wins:0,losses:0,draws:0,kos:0,tourn:0,fastKo:null,skins:{}},snap.exists?snap.data():{});d.cp=prog.cp|0;d.hats=(prog.hats||[]).slice(0,40);d.xp=myXp();d.ow=onlineWins();if(hasToken())d.tok=true;d.updated=Date.now();await ref.set(d)}catch(e){}}
+function renderWallet(){const t=`${(prog.cp|0).toLocaleString()} combo points`+(hasToken()?' · 7 Letters Token':'');document.querySelectorAll('.cpBal').forEach(e=>e.textContent=t)}
 const lvNeed=n=>Math.round(100*Math.pow(n,1.5)/10)*10;
 function lvInfo(xp){xp=Math.max(0,xp|0);let L=1,need=lvNeed(1),into=xp;while(into>=need&&L<999){into-=need;L++;need=lvNeed(L)}return{L,into,need}}
 function myXp(){return Math.max(prog.xp|0,(LB.mine&&LB.mine.xp)|0)}
@@ -1295,13 +1308,13 @@ function renderDaily(){const el=$('#dlyList');if(!el)return;const {D,st}=dailySt
 setInterval(()=>{if(!$('#menu').hidden)renderDaily()},60000);
 function renderLevel(){const el=$('#lvlBadge');if(!el)return;const I=lvInfo(myXp());el.innerHTML=`<b>Lv ${I.L}</b><i><u style="width:${(I.into/I.need*100).toFixed(1)}%"></u></i><small>${I.into}/${I.need} XP</small>`}
 async function recordResult(r){prog.cp=(prog.cp|0)+(r.cp|0);prog.xp=myXp()+(r.xp|0);// r:{win,draw,ko,koTime,skin,tourWin}
-  prog.skinW=prog.skinW||{};if(r.win){prog.skinW[SKINS[r.skin].name]=(prog.skinW[SKINS[r.skin].name]|0)+1}if(r.win)prog.wins++;else if(!r.draw)prog.losses++;if(r.win&&r.online)prog.ow=(prog.ow|0)+1;if(r.win&&r.ko)prog.kos++;if(r.tourWin){prog.tourn++;prog.belts[SKINS[r.skin].name]=true}store.set('rr.prog',prog);
+  prog.skinW=prog.skinW||{};if(r.win){prog.skinW[SKINS[r.skin].name]=(prog.skinW[SKINS[r.skin].name]|0)+1}if(r.win)prog.wins++;else if(!r.draw)prog.losses++;if(r.win&&!hasToken()&&Math.random()<(r.online?TOKEN_ODDS.online:TOKEN_ODDS.win)){prog.tok=true;game._tokNew=true}if(r.win&&r.online)prog.ow=(prog.ow|0)+1;if(r.win&&r.ko)prog.kos++;if(r.tourWin){prog.tourn++;prog.belts[SKINS[r.skin].name]=true}store.set('rr.prog',prog);
   if(!LB.db||!LB.uid||LB.canWrite===false){renderLB();return}
   try{const ref=LB.db.doc('records/'+LB.uid);const snap=await ref.get();const d=Object.assign({wins:0,losses:0,draws:0,kos:0,tourn:0,fastKo:null,skins:{}},snap.exists?snap.data():{});
     const n=SKINS[r.skin].name;const k=d.skins[n]=Object.assign({w:0,l:0,ko:0},d.skins[n]||{});
     if(r.win){d.wins++;k.w++}else if(r.draw)d.draws++;else{d.losses++;k.l++}
     if(r.win&&r.ko){d.kos++;k.ko++;if(typeof r.koTime==='number'&&(d.fastKo==null||r.koTime<d.fastKo))d.fastKo=Math.round(r.koTime*10)/10}
-    if(r.tourWin){d.tourn++;k.belt=true}d.cp=prog.cp|0;d.xp=prog.xp|0;d.ow=Math.max(d.ow|0,prog.ow|0);d.hats=(prog.hats||[]).slice(0,40);if(myName)d.name=myName;d.updated=Date.now();await ref.set(d)}catch(e){}
+    if(r.tourWin){d.tourn++;k.belt=true}d.cp=prog.cp|0;d.xp=prog.xp|0;d.ow=Math.max(d.ow|0,prog.ow|0);if(prog.tok)d.tok=true;d.hats=(prog.hats||[]).slice(0,40);if(myName)d.name=myName;d.updated=Date.now();await ref.set(d)}catch(e){}
   renderLB()}
 
 /* ---------- menus & modes ---------- */
@@ -1384,7 +1397,7 @@ function hatThumb(id){if(hatThumbs[id])return hatThumbs[id];try{if(!thumbR){thum
   else{const t=new THREE.Mesh(new THREE.CylinderGeometry(.24,.19,.52,20),pm);t.scale.set(.68,1,1);t.position.set(0,A.slot==='neck'?-.22:.28,0);sc.add(t);const nk=new THREE.Mesh(new THREE.CylinderGeometry(.06,.07,.14,12),pm);nk.position.set(0,A.slot==='neck'?.12:.62,0);sc.add(nk);h.rotation.y=A.slot==='robe'?-.5:-.9}
   const box=new THREE.Box3().setFromObject(h);const c=box.getCenter(new THREE.Vector3());const sz=box.getSize(new THREE.Vector3()).length();
   const cm=new THREE.PerspectiveCamera(30,1,.01,10);if(A&&A.slot==='face')cm.position.set(c.x+sz*.3,c.y+sz*.25,c.z+sz*2.2);else cm.position.set(c.x+sz*.55,c.y+sz*.75,c.z+sz*1.6);cm.lookAt(c.x,c.y-.03,c.z);thumbR.render(sc,cm);hatThumbs[id]=thumbR.domElement.toDataURL('image/png')}catch(e){hatThumbs[id]=''}return hatThumbs[id]}
-function renderShop(){const root=$('#shopGrid');root.innerHTML='';root.style.display='block';renderWallet();
+function renderShop(){const root=$('#shopGrid');root.innerHTML='';root.style.display='block';renderWallet();if(hasToken()){const tb=document.createElement('div');tb.className='tokban';const im=document.createElement('img');im.src=tokenImg();im.alt='';const tx=document.createElement('div');tx.innerHTML='<b>7 Letters Token</b><span>Everything in the Shop is free for you.</span>';tb.append(im,tx);root.appendChild(tb)}
   const secs=[['Hats & headbands','hat',HATS],['Sunglasses','face',ACCS.filter(a=>a.slot==='face')],['Chains','neck',ACCS.filter(a=>a.slot==='neck')],['Walkout robes','robe',ACCS.filter(a=>a.slot==='robe')]];
   const cur=sl=>sl==='hat'?hatOn():accOn()[ACC_SLOTS.indexOf(sl)];
   const setEq=(sl,id)=>{if(sl==='hat'){myHat=id;store.set('rr.hat',id)}else{myAcc[sl]=id;store.set('rr.acc',myAcc)}};
@@ -1593,7 +1606,7 @@ function showResult(){const F=game.F;const youSide=game.mode==='guest'?1:-1;
   else if(game.mode==='local'){again.textContent='Rematch';again.onclick=()=>startFight('local',F.A.skin,F.B.skin,game.tags)}
   else if(game.mode==='host'||game.mode==='guest'){again.id='rmBtn';again.textContent='Rematch';again.onclick=()=>{game._rmMe=true;if(game.mode==='guest'&&net.room)net.room.presence({rm:game.epoch}).catch(()=>{});rmTick()}}
   const m=document.createElement('button');m.className='btn';m.textContent='Main menu';m.onclick=showMenu;bt.append(again);if(again.textContent!=='Main menu')bt.append(m);if(game.mode==='host'||game.mode==='guest'){const st=document.createElement('p');st.className='status rmst';st.id='rmSt';bt.appendChild(st);rmTick()}
-  $('#result').hidden=false}
+  $('#result').hidden=false;if(game._tokNew){game._tokNew=false;setTimeout(tokenReveal,900)}}
 
 /* ============ LOOP ============ */
 const cam={x:0,look:new THREE.Vector3(0,1.3,0)};
@@ -1697,7 +1710,7 @@ $('#authForm').addEventListener('submit',async e=>{e.preventDefault();const u=$(
   $('#authGo').disabled=true;$('#authGo').textContent=ACC.mode==='signup'?'Creating account…':'Logging in…';
   try{if(ACC.mode==='signup')await ACC.signUp(u,p);else await ACC.logIn(u,p)}catch(x){err.textContent=ACC.msg(x);authMode(ACC.mode);err.textContent=ACC.msg(x)}finally{$('#authGo').disabled=false}});
 function onSignedIn(user){ACC.user=user;ACC.username=String(user.email||'').split('@')[0];$('#authOv').hidden=true;
-  if(store.get('rr.uid')!==user.uid){store.set('rr.uid',user.uid);Object.assign(prog,{wins:0,losses:0,kos:0,tourn:0,belts:{},skinW:{},cp:0,hats:[],xp:0,ow:0});myHat='';store.set('rr.hat','');store.set('rr.prog',prog);myName='';store.set('rr.name','')}
+  if(store.get('rr.uid')!==user.uid){store.set('rr.uid',user.uid);Object.assign(prog,{wins:0,losses:0,kos:0,tourn:0,belts:{},skinW:{},cp:0,hats:[],xp:0,ow:0,tok:false});myHat='';store.set('rr.hat','');store.set('rr.prog',prog);myName='';store.set('rr.name','')}
   $('#acctName').textContent=ACC.username;startLB();showNameScreen()}
 function accountsBoot(){if(!ACC.init()){initLB();showMenu();showNameScreen();return}
   $('#acctRow').hidden=false;showMenu();$('#menu').hidden=true;$('#nameOv').hidden=true;$('#authOv').hidden=false;$('#authLoading').hidden=false;$('#authForm').hidden=true;
