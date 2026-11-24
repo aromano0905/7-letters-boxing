@@ -192,6 +192,7 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
 .pzcard{background:#16171d;border:1px solid var(--line);border-radius:16px;padding:22px 26px;text-align:center;min-width:280px;display:grid;gap:12px}
 .pzcard h2{margin:0;font-family:var(--display);font-style:italic;font-weight:800;text-transform:uppercase;font-size:44px;line-height:1}.pzcard p{margin:0;color:var(--muted)}
 .pzbar{height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden}.pzbar u{display:block;height:100%;background:var(--gold);text-decoration:none;transition:width .25s linear}
+.odot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--hp);box-shadow:0 0 7px var(--hp);margin-right:7px;vertical-align:middle}
 .recrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .lvbig{display:grid;justify-items:center;gap:2px;padding:10px 26px;border-radius:14px;background:linear-gradient(160deg,#fff3a6,#f2c230 45%,#c98a0b);color:#2a1a00;box-shadow:0 0 40px rgba(242,194,48,.55);animation:lvpop .6s cubic-bezier(.2,1.6,.4,1)}
 .lvbig b{font-family:var(--display);font-style:italic;font-weight:800;font-size:clamp(40px,9vw,64px);line-height:.9;text-transform:uppercase}
@@ -566,11 +567,11 @@ setTimeout(()=>{RELAY.ready().then(ok=>{if(ok)CHAT.init()})},1300);
 /* ---------- Players online + players searching in Quick match (Firebase Realtime Database, /presence) ---------- */
 const PRESENCE={id:'p'+Math.random().toString(36).slice(2,12),n:0,q:0,mineQ:false,
   init(){const db=RELAY.db,me=db.ref('presence/'+this.id),ts=()=>window.firebase&&firebase.database&&!window.__RTDB_MOCK?firebase.database.ServerValue.TIMESTAMP:Date.now();
-    const beat=()=>{this.mineQ=!!window.__qmSearching;me.set({t:ts(),q:this.mineQ}).catch(()=>{})};try{me.onDisconnect().remove()}catch(e){}beat();setInterval(beat,60000);
-    setInterval(()=>{if(!!window.__qmSearching!==this.mineQ)beat();this.show()},700);
+    const beat=()=>{this.mineQ=!!window.__qmSearching;this.mineU=String(window.__myUid||'').slice(0,40);me.set({t:ts(),q:this.mineQ,u:this.mineU}).catch(()=>{})};try{me.onDisconnect().remove()}catch(e){}beat();setInterval(beat,60000);
+    setInterval(()=>{if(!!window.__qmSearching!==this.mineQ||String(window.__myUid||'')!==this.mineU)beat();this.show()},700);
     addEventListener('pagehide',()=>{try{me.remove()}catch(e){}});
     db.ref('presence').on('value',s=>{const v=s.val()||{},now=RELAY.now();const live=Object.entries(v).filter(([k,x])=>x&&now-(+x.t||0)<150000);
-      this.n=live.length;this.q=live.filter(([k,x])=>x.q===true&&k!==this.id).length;this.show()},()=>{})},
+      this.n=live.length;this.q=live.filter(([k,x])=>x.q===true&&k!==this.id).length;const ou=new Set(live.map(([k,x])=>x.u).filter(Boolean));const key=[...ou].sort().join(',');if(key!==this._ouk){this._ouk=key;window.__onlineUids=ou;if(typeof window.__renderLB==='function')window.__renderLB()}this.show()},()=>{})},
   show(){const n=Math.max(1,this.n),q=this.q;const el=document.getElementById('onlineCnt');
     if(el){el.hidden=false;el.textContent=(n===1?'Just you online right now':n+' players online')+(q>0?` · ${q} looking for a match`:'')}
     const ls=document.getElementById('qmWaiting');if(ls){ls.hidden=!window.__qmSearching;ls.textContent=q>0?`${q} other ${q===1?'player':'players'} searching right now`:'No one else is searching yet'}}};
@@ -1300,7 +1301,7 @@ function renderLB(){const P=progress();const mr=$('#myRec');
   const recs=LB.recs.filter(r=>(r.wins|0)+(r.losses|0)>0);
   if(!recs.length){pl.innerHTML='<p class="status">No fights recorded yet. Beat the CPU, win a tournament fight or an online match to get on the board.</p>'}
   else{const rows=recs.slice().sort((a,b)=>(b.wins|0)-(a.wins|0)||(b.kos|0)-(a.kos|0));
-    pl.innerHTML='<table><thead><tr><th>#</th><th class="nm">Player</th><th>Lv</th><th>Wins</th><th>Losses</th><th>KOs</th><th>Fastest KO</th><th>Belts</th></tr></thead><tbody>'+rows.map((r,i)=>`<tr class="${r.id===LB.uid?'me':''}"><td>${i+1}</td><td class="nm">${esc((typeof r.name==='string'&&cleanName(r.name))||LB.names[r.id]||(r.id===LB.uid?'You':'Player'))}</td><td>${lvInfo(r.xp|0).L}</td><td>${r.wins|0}</td><td>${r.losses|0}</td><td>${r.kos|0}</td><td>${fmtT(typeof r.fastKo==='number'?r.fastKo:null)}</td><td>${r.tourn|0}</td></tr>`).join('')+'</tbody></table>'}
+    pl.innerHTML='<table><thead><tr><th>#</th><th class="nm">Player</th><th>Lv</th><th>Wins</th><th>Losses</th><th>KOs</th><th>Fastest KO</th><th>Belts</th></tr></thead><tbody>'+rows.map((r,i)=>`<tr class="${r.id===LB.uid?'me':''}"><td>${i+1}</td><td class="nm">${window.__onlineUids&&window.__onlineUids.has(r.id)?'<i class="odot" title="Online now"></i>':''}${esc((typeof r.name==='string'&&cleanName(r.name))||LB.names[r.id]||(r.id===LB.uid?'You':'Player'))}</td><td>${lvInfo(r.xp|0).L}</td><td>${r.wins|0}</td><td>${r.losses|0}</td><td>${r.kos|0}</td><td>${fmtT(typeof r.fastKo==='number'?r.fastKo:null)}</td><td>${r.tourn|0}</td></tr>`).join('')+'</tbody></table>'}
   const agg=SKINS.map(s=>({n:s.name,w:0,l:0,ko:0}));recs.forEach(r=>{const S=r.skins||{};agg.forEach(a=>{const x=S[a.n];if(x){a.w+=x.w|0;a.l+=x.l|0;a.ko+=x.ko|0}})});
   agg.sort((a,b)=>b.w-a.w||a.l-b.l);
   sk.innerHTML='<table><thead><tr><th class="nm">Skin</th><th>Wins</th><th>Win %</th><th>KOs</th></tr></thead><tbody>'+agg.map(a=>`<tr><td class="nm">${esc(a.n)}</td><td>${a.w}</td><td>${a.w+a.l?Math.round(a.w/(a.w+a.l)*100)+'%':'—'}</td><td>${a.ko}</td></tr>`).join('')+'</tbody></table>';
@@ -1792,8 +1793,8 @@ function accountsBoot(){if(!ACC.init()){initLB();showMenu();showNameScreen();ret
     if(u){onSignedIn(u)}else{ACC.user=null;stopLB();LB.status='off';LB.mine=null;if(first)showAuth('signup');else showAuth('login')}first=false})}
 $('#logoutBtn').onclick=async()=>{await ACC.logOut()};
 /* leaderboard backed by the account database */
-let lbUnsub=[];function stopLB(){lbUnsub.forEach(f=>{try{f()}catch(e){}});lbUnsub=[]}
-function startLB(){stopLB();const fs=ACC.fs,uid=ACC.user.uid;LB.db={doc:p=>fs.doc(p),collection:p=>fs.collection(p)};LB.uid=uid;LB.canWrite=true;LB.status='loading';LB.user=null;renderLB();
+let lbUnsub=[];function stopLB(){window.__myUid='';lbUnsub.forEach(f=>{try{f()}catch(e){}});lbUnsub=[]}
+function startLB(){stopLB();const fs=ACC.fs,uid=ACC.user.uid;LB.db={doc:p=>fs.doc(p),collection:p=>fs.collection(p)};LB.uid=uid;window.__myUid=uid;LB.canWrite=true;LB.status='loading';LB.user=null;renderLB();
   lbUnsub.push(fs.collection('records').orderBy('wins','desc').limit(1000).onSnapshot(s=>{LB.recs=s.docs.map(d=>({id:d.id,...(d.data()||{})}));LB.status='ok';renderLB()},()=>{LB.status='off';renderLB()}));
   lbUnsub.push(fs.doc('records/'+uid).onSnapshot(d=>{LB.mine=d.exists?{id:uid,...d.data()}:null;if(LB.mine&&typeof LB.mine.name==='string')adoptSavedName(LB.mine.name);syncWallet();renderLevel();renderLB();if(!$('#menu').hidden)renderSkinGrid(mySkin,pickHandler)},()=>{}))}
 /* change password */
