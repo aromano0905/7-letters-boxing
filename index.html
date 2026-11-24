@@ -127,7 +127,7 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
 .r-magnolia-mythic{background:linear-gradient(170deg,#7ff3f0,#22b8c9 40%,#0d6f8f 75%,#083d5c)}
 .r-legendary{background:linear-gradient(170deg,#f2b347,#b35a17 60%,#6e2c0b)}
 .r-special-edition{background:linear-gradient(170deg,#3b1a4f,#1a0d24 55%,#0b0610);border-color:#e8b923!important;box-shadow:0 0 0 1px #e8b923 inset,0 0 22px rgba(232,185,35,.35)}
-.r-special-edition::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(232,185,35,.45) 45%,transparent 60%);background-size:250% 100%;animation:shine 2.8s linear infinite;pointer-events:none}
+.r-special-edition::after{content:"";position:absolute;top:0;bottom:0;left:-100%;width:300%;background:linear-gradient(115deg,transparent 40%,rgba(232,185,35,.45) 50%,transparent 60%);animation:shine 2.8s linear infinite;pointer-events:none;will-change:transform}
 .r-special-edition .rr{color:#f2c230}
 .r-epic{background:linear-gradient(170deg,#d39bff,#9b4de6 50%,#55209c)}
 .r-rare{background:linear-gradient(170deg,#5aa6f0,#2856b8 60%,#15296a)}
@@ -135,8 +135,8 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
 .r-random{background:linear-gradient(170deg,#3a3f4a,#20232b 60%,#121419);border:2px dashed rgba(255,255,255,.35)}
 .card .rq{display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:64px;color:#fff;background:rgba(255,255,255,.08)}
 .r-common{background:linear-gradient(170deg,#c4c8cc,#8a9096 60%,#4e5358)}
-.r-mythic::after,.r-magnolia-mythic::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.42) 45%,transparent 60%);background-size:250% 100%;animation:shine 3.4s linear infinite;pointer-events:none}
-@keyframes shine{from{background-position:150% 0}to{background-position:-100% 0}}
+.r-mythic::after,.r-magnolia-mythic::after{content:"";position:absolute;top:0;bottom:0;left:-100%;width:300%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.42) 50%,transparent 60%);animation:shine 3.4s linear infinite;pointer-events:none;will-change:transform}
+@keyframes shine{from{transform:translateX(-33%)}to{transform:translateX(33%)}}
 .gear{display:flex;gap:10px 28px;flex-wrap:wrap}
 .gearrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .gearrow .lbl{min-width:56px}
@@ -607,15 +607,21 @@ function skinCard(i,pressed,opt){opt=opt||{};const s=SKINS[i];const c=document.c
   const ab=document.createElement('span');ab.className='ab';ab.textContent=`${s.pw.name} · every ${s.pw.every} hits`+(s.heal?` · ${s.heal} heal${s.heal>1?'s':''}`:'');const sts=document.createElement('span');sts.className='sts';sts.textContent=`Speed ${Math.round(s.spd*100)} · Health ${s.hp} · Power ${s.pow}`;c.append(f,n,r,ab,sts,e);if(opt.style&&opt.style!=='default'){f.classList.add('fs-'+opt.style);const sb=document.createElement('span');sb.className='stb st-'+opt.style;sb.textContent=opt.style==='gold'?'Gold':opt.style==='diamond'?'Diamond':'Chrome';c.appendChild(sb)}if(opt.champ){const ch=document.createElement('span');ch.className='belt';ch.textContent='Champion';c.appendChild(ch)}if(opt.locked){const lk=document.createElement('span');lk.className='lock';lk.textContent=opt.locked;c.appendChild(lk)}return c}
 
 /* ============ THREE ============ */
-const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
-renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+const QUAL={levels:[Math.min(devicePixelRatio||1,1.5),1.25,1,.8,.65].filter((v,i,a)=>i===0||v<a[0]),i:0,shadows:true};
+try{const q=JSON.parse(localStorage.getItem('rr.q2')||'null');if(q){QUAL.i=Math.min(QUAL.levels.length-1,q.i|0);QUAL.shadows=q.s!==false}}catch(e){}
+renderer.setPixelRatio(QUAL.levels[QUAL.i]);
+renderer.shadowMap.enabled=QUAL.shadows;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
 $('#stage').appendChild(renderer.domElement);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x07080c);scene.fog=new THREE.Fog(0x07080c,12,34);
 const camera=new THREE.PerspectiveCamera(42,1,.05,200);
 const lin=c=>new THREE.Color(c).convertSRGBToLinear();
+let _glowT=null;function glowTex(){if(_glowT)return _glowT;const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');const g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.2,'rgba(255,255,255,.85)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,64,64);_glowT=new THREE.CanvasTexture(c);return _glowT}
+function glowFlash(size,max){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0}));sp.scale.setScalar(size);sp.visible=false;let v=0;
+  return{sp,position:sp.position,get intensity(){return v},set intensity(n){v=n;sp.material.opacity=Math.min(1,n/max);sp.visible=n>.03}}}
 const std=(c,r=.7,m=0)=>new THREE.MeshStandardMaterial({color:lin(c),roughness:r,metalness:m});
 const hemi=new THREE.HemisphereLight(0x8899bb,0x221a18,.45);scene.add(hemi);
-const key=new THREE.SpotLight(0xfff2dd,2.6,30,PI/5,.45,1.2);key.position.set(0,11,2.5);key.target.position.set(0,1,0);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.bias=-.0004;scene.add(key,key.target);
+const key=new THREE.SpotLight(0xfff2dd,2.6,30,PI/5,.45,1.2);key.position.set(0,11,2.5);key.target.position.set(0,1,0);key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.bias=-.0004;scene.add(key,key.target);
 const rimA=new THREE.PointLight(0xff5566,1.1,14);rimA.position.set(-5,4,-3);const rimB=new THREE.PointLight(0x5588ff,1.1,14);rimB.position.set(5,4,-3);scene.add(rimA,rimB);
 const fill=new THREE.DirectionalLight(0xffffff,.35);fill.position.set(0,3,8);scene.add(fill);
 // ring
@@ -668,7 +674,7 @@ const fill=new THREE.DirectionalLight(0xffffff,.35);fill.position.set(0,3,8);sce
     col.setHSL(Math.random(),.25,.1+Math.random()*.1).convertSRGBToLinear();body.setColorAt(k,col);col.setHSL(.07,.3,.2+Math.random()*.18).convertSRGBToLinear();head.setColorAt(k,col)}
   main.add(body,head);
   // flashes
-  const fl=[];for(let i=0;i<14;i++){const l=new THREE.PointLight(0xffffff,0,6);scene.add(l);fl.push(l)}scene.userData.flashes=fl;
+  const fl=[];for(let i=0;i<14;i++){const l=glowFlash(.9,3);scene.add(l.sp);fl.push(l)}scene.userData.flashes=fl;
   // overhead lighting rig + hanging scoreboard
   const rigM=std(0x1a1b20,.6,.4),lampM=new THREE.MeshBasicMaterial({color:0xfff6e0});
   [[0,-3.2,8,.12],[0,3.2,8,.12],[-3.2,0,.12,6.4],[3.2,0,.12,6.4]].forEach(([px,pz,w,d])=>{const bar=new THREE.Mesh(new THREE.BoxGeometry(w,.12,d),rigM);bar.position.set(px,7.5,pz);main.add(bar)});
@@ -729,7 +735,7 @@ function makeCamera(){const g=new THREE.Group();const add=(geo,mat,pos,rot)=>{co
   add(new THREE.BoxGeometry(.1,.13,.22),std(0x1b1c20,.45,.3),[0,0,0]);add(new THREE.CylinderGeometry(.05,.055,.1,18),std(0x2a2c31,.3,.6),[.09,0,0],[0,0,PI/2]);
   add(new THREE.CylinderGeometry(.038,.038,.012,18),std(0x6fa8dc,.1,.8),[.142,0,0],[0,0,PI/2]);add(new THREE.BoxGeometry(.04,.04,.06),std(0x3a3c42,.4,.4),[0,.085,-.05]);
   const fl=add(new THREE.BoxGeometry(.015,.035,.06),new THREE.MeshBasicMaterial({color:0xfafafa}),[.052,.04,.075]);g.userData.flash=fl;
-  const L=new THREE.PointLight(0xffffff,0,7);L.position.set(.3,0,0);g.add(L);g.userData.light=L;g.userData.fl=0;return g}
+  const L=glowFlash(.7,9);L.position.set(.12,.04,.08);g.add(L.sp);g.userData.light=L;g.userData.fl=0;return g}
 function makeZzz(){const g=new THREE.Group();const cv=document.createElement('canvas');cv.width=cv.height=96;const x=cv.getContext('2d');x.font='900 84px Arial';x.textAlign='center';x.textBaseline='middle';x.lineWidth=10;x.strokeStyle='#1b2a5c';x.strokeText('Z',48,52);x.fillStyle='#bcd6ff';x.fillText('Z',48,52);
   const t=new THREE.CanvasTexture(cv);for(let i=0;i<3;i++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false}));sp.renderOrder=8;g.add(sp)}g.visible=false;return g}
 function makeStars(){const g=new THREE.Group();const cv=document.createElement('canvas');cv.width=cv.height=64;const x=cv.getContext('2d');x.fillStyle='#ffd23f';x.beginPath();for(let i=0;i<10;i++){const r=i%2?12:30,a=i*PI/5-PI/2;x.lineTo(32+Math.cos(a)*r,32+Math.sin(a)*r)}x.fill();
@@ -1621,7 +1627,11 @@ function showResult(){const F=game.F;const youSide=game.mode==='guest'?1:-1;
 const cam={x:0,look:new THREE.Vector3(0,1.3,0)};
 function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w<h?66:40;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize();
 let last=performance.now(),T=0;
-function frame(now){const rdt=Math.min(.05,(now-last)/1000);last=now;const dt=rdt*(game.slowT>0?game.slowK:1);game.slowT=Math.max(0,game.slowT-rdt);T+=dt;let F=game.F;
+const PERF={t0:0,n:0,bad:0,start:performance.now()};
+function qualityDown(){if(QUAL.i<QUAL.levels.length-1){QUAL.i++;renderer.setPixelRatio(QUAL.levels[QUAL.i]);resize()}else if(QUAL.shadows){QUAL.shadows=false;renderer.shadowMap.enabled=false;scene.traverse(o=>{if(o.material)[].concat(o.material).forEach(m=>m.needsUpdate=true)})}else return;
+  try{localStorage.setItem('rr.q2',JSON.stringify({i:QUAL.i,s:QUAL.shadows}))}catch(e){}}
+function perfTick(now){if(document.hidden){PERF.t0=now;PERF.n=0;return}if(now-PERF.start<4000){PERF.t0=now;return}PERF.n++;if(now-PERF.t0>=1000){const fps=PERF.n*1000/(now-PERF.t0);PERF.t0=now;PERF.n=0;if(fps<42){PERF.good=0;if(++PERF.bad>=2){PERF.bad=0;qualityDown()}}else{PERF.bad=0;if(fps>57&&QUAL.i>0&&++PERF.good>=10){PERF.good=0;QUAL.i--;renderer.setPixelRatio(QUAL.levels[QUAL.i]);resize();try{localStorage.setItem('rr.q2',JSON.stringify({i:QUAL.i,s:QUAL.shadows}))}catch(e){}}else if(fps<=57)PERF.good=0}}}
+function frame(now){perfTick(now);const rdt=Math.min(.05,(now-last)/1000);last=now;const dt=rdt*(game.slowT>0?game.slowK:1);game.slowT=Math.max(0,game.slowT-rdt);T+=dt;let F=game.F;
   // lobby handling
   if(qm.on&&!quickTick._busy){quickTick._busy=true;quickTick(now).finally(()=>{quickTick._busy=false})}
   if(game.mode==='lobby-host'&&net.room){const o=net.other();if(o&&typeof o.presence.sk==='number'){const gs=clamp(o.presence.sk|0,0,SKINS.length-1);net.guestGear=validGear(o.presence.gr);net.guestStyle=String(o.presence.sty||'default');net.guestHat=String(o.presence.hat||'');net.guestAcc=validAcc(o.presence.ac);game.epoch++;startFight('host',mySkin,gs,[tagYou(),(cleanName(o.presence.nm)||'Opponent')+(o.presence.lv>0?' · Lv '+Math.min(999,o.presence.lv|0):'')])}}
@@ -1693,7 +1703,7 @@ function frame(now){const rdt=Math.min(.05,(now-last)/1000);last=now;const dt=rd
   [game.A,game.B].forEach(g=>{if(!g)return;[g.hatM,g.faceM].forEach(M=>{if(!M)return;g.root.updateMatrixWorld(true);const wp=M.getWorldPosition(_hp1);const yaw=Math.atan2(camera.position.x-wp.x,camera.position.z-wp.z);g.torso.getWorldQuaternion(_hq1);_hq2.setFromAxisAngle(UP,yaw);M.quaternion.copy(_hq1.invert()).multiply(_hq2)})});
   // crowd flashes
   scene.userData.flashes.forEach(l=>{l.intensity*=.82;if(scene.userData.flashesOn!==false&&Math.random()<dt*.6){const a=Math.random()*PI*2;l.position.set(Math.cos(a)*8,1+Math.random()*2,Math.sin(a)*6-1);l.intensity=3}});
-  renderer.render(scene,camera);requestAnimationFrame(frame)}
+  const menuUp=!game.intro&&!game.outro&&$('#hud').hidden&&(!$('#menu').hidden||!$('#shopOv').hidden||!$('#profileOv').hidden);game._rf=(game._rf|0)+1;if(!menuUp||game._rf%3===0)renderer.render(scene,camera);requestAnimationFrame(frame)}
 function flash(){if(scene.userData.flashesOn===false)return;const l=scene.userData.flashes[Math.random()*14|0];l.position.set(cam.x+(Math.random()-.5)*6,2.5,-4);l.intensity=6}
 /* ---------- Accounts (Firebase Auth + Firestore) ---------- */
 const ACC={on:false,fb:null,auth:null,fs:null,user:null,username:'',ready:false,
@@ -1743,7 +1753,7 @@ $('#pwForm').addEventListener('submit',async e=>{e.preventDefault();const msg=$(
   finally{$('#pwGo').disabled=false}});
 
 accountsBoot();requestAnimationFrame(frame);
-window.__putHat=putHat;window.__lv=lvInfo;window.__rr={game,SKINS,startFight,stepFight,aiThinkT:(a,m,o,d)=>aiThink(a,m,o,d)};
+window.__putHat=putHat;window.__lv=lvInfo;window.__rr={QUAL,game,SKINS,startFight,stepFight,aiThinkT:(a,m,o,d)=>aiThink(a,m,o,d)};
 })();
 </script>
 </body></html>
