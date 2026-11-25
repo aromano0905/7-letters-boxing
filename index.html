@@ -925,7 +925,7 @@ function poseBoxer(g,b,time,winner){
   const face=b.side<0?0:PI;if(game.mode==='guest'){const dtx=Math.min(.05,Math.max(0,time-(g._xt||time)));g._xt=time;g._x=g._x==null||Math.abs(b.x-g._x)>1.2?b.x:g._x+(b.x-g._x)*(1-Math.exp(-18*dtx));g.root.position.x=g._x}else g.root.position.x=b.x;let turn=0;if(b.s==='punch'&&b.p==='butt'){const d0=PUNCH.butt,t0=b.t;turn=t0<d0.wu?smooth(t0/d0.wu):t0<d0.wu+d0.act+.12?1:1-smooth((t0-d0.wu-d0.act-.12)/(d0.end-d0.wu-d0.act-.12))}g.root.rotation.y=face+turn*PI;const ankleOn=b.s==='punch'&&b.p==='ankle';g._sc=lerp(g._sc||1,ankleOn?.72:1,.25);g.root.scale.setScalar(g._sc);
   const moving=b.s==='walk'||!!b.mv;const bob=Math.sin(time*7+b.side)*.02;
   let lean=0,yaw=0,back=0,drop=0,crouch=.0;const gl=[GUARD[0].clone(),GUARD[1].clone()];
-  if(b.block){gl[0].set(.3,1.6,.09);gl[1].set(.27,1.58,-.09);crouch=.04;lean=.08}
+  if(b.block||(b.gb>0&&b.s!=='punch')){gl[0].set(.3,1.6,.09);gl[1].set(.27,1.58,-.09);crouch=.04;lean=.08}
   if(b.s==='punch'){const d=PUNCH[b.p];const t=b.t;const e=t<d.wu?smooth(t/d.wu)*.85:t<d.wu+d.act?1:1-smooth((t-d.wu-d.act)/(d.end-d.wu-d.act));
     const an=d.anim;
     if(an==='katana'){const w=smooth(Math.min(1,t/d.wu)),sw=t<d.wu?0:smooth(Math.min(1,(t-d.wu)/.12)),rec=t>d.wu+d.act+.12?smooth(Math.min(1,(t-d.wu-d.act-.12)/.3)):0;
@@ -1176,7 +1176,7 @@ function boxerStep(F,b,o,inp,dt){
   const S=SKINS[b.skin];b.t+=dt*(b.s==='punch'?b.spd:1);if(b.inf>0){b.inf=Math.max(0,b.inf-dt);b.st=100}
   if(b.stun>0){b.stun-=dt;if(b.stun<=0)b.slp=false;b.block=false;b.mv=0;b.q=null;inp.p=null;if(b.s==='punch'||b.s==='walk'){b.s='idle';b.t=0}else if(b.s==='hit'&&b.t>.3){b.s='idle';b.t=0}else if(b.s==='slam'&&b.t>1.25){b.s='idle';b.t=0}b.st=Math.min(100,b.st+19*dt);return}if(inp.p){if(inp.p==='heal'){if(b.heals>0&&b.s!=='ko'){b.heals--;b.healUsed=b.heals<=0;b.hp=Math.min(b.max,b.hp+16);F.ev.push('heal')}}else{b.q=inp.p;b.qt=.22}inp.p=null}if(b.qt>0)b.qt-=dt;else b.q=null;
   const mv=(inp.r?1:0)-(inp.l?1:0);b.mv=0;
-  if(b.dcd>0)b.dcd-=dt;if(b.tcd>0)b.tcd-=dt;if(b.bub>0)b.bub-=dt;if(b.counter>0)b.counter-=dt;
+  if(b.dcd>0)b.dcd-=dt;if(b.tcd>0)b.tcd-=dt;if(b.jabT>0)b.jabT-=dt;if(b.gb>0)b.gb-=dt;if(b.bub>0)b.bub-=dt;if(b.counter>0)b.counter-=dt;
   if(b.s==='dodge'){b.block=false;b.x+=b.side*1.3*dt*(b.t<.25?1:0);if(b.t>DODGE_T){b.s='idle';b.t=0}}
   else if(b.s==='hit'){b.block=false;if(b.t>.3){b.s='idle';b.t=0}}
   else if(b.s==='slam'){b.block=false;if(b.t>1.25){b.s='idle';b.t=0}}
@@ -1200,8 +1200,9 @@ function boxerStep(F,b,o,inp,dt){
 const COMBO_WIN=.9,DODGE_T=.42,DODGE_SAFE=.32,DODGE_CD=.85,DODGE_ST=10,COUNTER_X=1.6;
 const dodging=o=>o.s==='dodge'&&o.t<DODGE_SAFE;
 function dodged(F,a,o){F.ev.push('whiff');if(!(o.counter>0)){o.counter=.8;o.pdg=(o.pdg|0)+1;F.ev.push('perfect');F.ev.push(o.side<0?'perfectA':'perfectB')}}
-function land(F,a,o,d){if(dodging(o)){dodged(F,a,o);return}let dmg=d.pw?d.dmg:d.dmg*(.5+.5*a.st/100)*(a.pow||1);const push=-a.side;if(a.counter>0&&!d.pw){dmg*=COUNTER_X;a.counter=0;F.ev.push('counterhit')}
-  if(!d.pw&&o.block){o.st=Math.max(0,o.st-d.dmg*2.2);dmg*=.15;o.hp-=dmg;a.dealt+=dmg;o.x+=push*.08;a.combo=0;a.comboT=0;F.ev.push('block');F.ev.push(o.side<0?'blkA':'blkB');o.hp=Math.max(0,o.hp);if(o.hp<=0)afterDamage(F,o,false);return}
+const JAB_RUN=3;
+function land(F,a,o,d){if(dodging(o)){dodged(F,a,o);return}if(d===PUNCH.jab){a.jabRun=(a.jabT>0?(a.jabRun|0):0)+1;a.jabT=1}else a.jabRun=0;const autoBlk=d===PUNCH.jab&&a.jabRun>JAB_RUN&&o.s!=='ko'&&o.s!=='slam';if(autoBlk)o.gb=.35;let dmg=d.pw?d.dmg:d.dmg*(.5+.5*a.st/100)*(a.pow||1);const push=-a.side;if(a.counter>0&&!d.pw){dmg*=COUNTER_X;a.counter=0;F.ev.push('counterhit')}
+  if(!d.pw&&(o.block||autoBlk)){o.st=Math.max(0,o.st-d.dmg*2.2);dmg*=.15;o.hp-=dmg;a.dealt+=dmg;o.x+=push*.08;a.combo=0;a.comboT=0;F.ev.push('block');F.ev.push(o.side<0?'blkA':'blkB');o.hp=Math.max(0,o.hp);if(o.hp<=0)afterDamage(F,o,false);return}
   a.combo=a.comboT>0?a.combo+1:1;if(a.combo>=2){a.cp=(a.cp|0)+a.combo}a.comboT=COMBO_WIN;a.best=Math.max(a.best,a.combo);
   const bonus=1+.25*Math.min(Math.max(a.combo-2,0),4);dmg*=bonus;
   o.hp-=dmg;a.dealt+=dmg;o.s='hit';o.t=0;o.p=null;o.block=false;o.combo=0;o.comboT=0;
@@ -1302,9 +1303,9 @@ const net={room:null,lobby:null,role:null,code:null,peer:null,lastIn:null,pn:0,l
     if(this.peer){const p=ps.find(q=>q.peer===this.peer);if(p)return p}const p=ps.find(q=>!q.sameTab&&q.presence&&q.presence.role===want);if(p&&!this.peer)this.peer=p.peer;return p||null},
   punch(t){this.pn++;this.lastPunch=ACTS.indexOf(t)},
   sendInput(){if(!this.room||this.role!=='guest')return;const I=input[0];this.room.presence({i:[I.l?1:0,I.r?1:0,I.b?1:0,this.pn,this.lastPunch|0]}).catch(()=>{})},
-  pack(F){const pb=b=>[Math.round(b.x*100),Math.round(b.hp*10),Math.round(b.st),STATES.indexOf(b.s),Math.round(b.t*100),b.p?PKEYS.indexOf(b.p):-1,b.block?1:0,Math.round(b.dealt),b.landed,b.thrown,b.mv|0,b.pwN,b.heals|0,b.comboT>0?b.combo:0,b.kdTotal,b.best,Math.round((b.stun||0)*10),Math.round((b.bub||0)*10),b.cp|0,b.pdg|0,b.pwc|0,Math.round((b.inf||0)*10),b.stun>0&&b.slp?1:0];
+  pack(F){const pb=b=>[Math.round(b.x*100),Math.round(b.hp*10),Math.round(b.st),STATES.indexOf(b.s),Math.round(b.t*100),b.p?PKEYS.indexOf(b.p):-1,b.block?1:0,Math.round(b.dealt),b.landed,b.thrown,b.mv|0,b.pwN,b.heals|0,b.comboT>0?b.combo:0,b.kdTotal,b.best,Math.round((b.stun||0)*10),Math.round((b.bub||0)*10),b.cp|0,b.pdg|0,b.pwc|0,Math.round((b.inf||0)*10),b.stun>0&&b.slp?1:0,Math.round(Math.max(0,b.gb||0)*10)];
     return{f:[['intro','fight','break','over','count'].indexOf(F.ph),F.r,Math.round(F.time*10),F.w,F.how,Math.round(F.t*100),game.epoch,F.kd?[F.kd.side,F.kd.n,F.kd.got,F.kd.need]:0,Math.round((F.el||0)*10)],a:pb(F.A),b:pb(F.B),s:[F.A.skin,F.B.skin],gr:game.gears,sty:game.styles,hats:game.hats,acs:game.accs,rm:game._rmMe?1:0,pz:game.pz?[game.pz.by==='guest'?1:0,Math.round(Math.max(0,game.pz.end-performance.now())/100)]:0,ar:ARENAS.findIndex(a=>a.id===game.arena),e:F.ev.slice(0,4),j:F.proj.slice(0,4).map(p=>[PROJ.indexOf(p.k),Math.round(p.x*100),p.o,Math.round(p.rot*10)])}},
-  unpack(P,F){const ub=(b,v)=>{b.x=v[0]/100;b.hp=v[1]/10;b.st=v[2];b.s=STATES[v[3]]||'idle';b.t=v[4]/100;b.p=v[5]>=0?PKEYS[v[5]]:null;b.block=!!v[6];b.dealt=v[7];b.landed=v[8];b.thrown=v[9];b.mv=v[10]|0;b.pwN=v[11]|0;b.heals=v[12]|0;b.healUsed=b.heals<=0;b.combo=v[13]|0;b.comboT=b.combo?1:0;b.kdTotal=v[14]|0;b.best=v[15]|0;b.stun=(v[16]|0)/10;b.bub=(v[17]|0)/10;b.cp=v[18]|0;b.pdg=v[19]|0;b.pwc=v[20]|0;b.inf=(v[21]|0)/10;b.slp=!!v[22]};
+  unpack(P,F){const ub=(b,v)=>{b.x=v[0]/100;b.hp=v[1]/10;b.st=v[2];b.s=STATES[v[3]]||'idle';b.t=v[4]/100;b.p=v[5]>=0?PKEYS[v[5]]:null;b.block=!!v[6];b.dealt=v[7];b.landed=v[8];b.thrown=v[9];b.mv=v[10]|0;b.pwN=v[11]|0;b.heals=v[12]|0;b.healUsed=b.heals<=0;b.combo=v[13]|0;b.comboT=b.combo?1:0;b.kdTotal=v[14]|0;b.best=v[15]|0;b.stun=(v[16]|0)/10;b.bub=(v[17]|0)/10;b.cp=v[18]|0;b.pdg=v[19]|0;b.pwc=v[20]|0;b.inf=(v[21]|0)/10;b.slp=!!v[22];b.gb=(v[23]|0)/10};
     F.ph=['intro','fight','break','over','count'][P.f[0]]||'intro';F.r=P.f[1];F.time=P.f[2]/10;F.w=P.f[3];F.how=P.f[4];F.t=P.f[5]/100;const k=P.f[7];F.kd=Array.isArray(k)?{side:k[0],n:k[1],got:k[2],need:k[3]}:null;F.el=(P.f[8]|0)/10;ub(F.A,P.a);ub(F.B,P.b);F.proj=(P.j||[]).map(q=>({k:PROJ[q[0]]||'pudding',x:q[1]/100,o:q[2],rot:q[3]/10,v:-q[2]}));return P.f[6]}
 };
 
