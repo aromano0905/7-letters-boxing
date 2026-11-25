@@ -192,6 +192,7 @@ h2{margin:0;font-family:var(--display);font-weight:800;font-size:24px;text-trans
 .pzcard{background:#16171d;border:1px solid var(--line);border-radius:16px;padding:22px 26px;text-align:center;min-width:280px;display:grid;gap:12px}
 .pzcard h2{margin:0;font-family:var(--display);font-style:italic;font-weight:800;text-transform:uppercase;font-size:44px;line-height:1}.pzcard p{margin:0;color:var(--muted)}
 .pzbar{height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden}.pzbar u{display:block;height:100%;background:var(--gold);text-decoration:none;transition:width .25s linear}
+.lbface{width:28px;height:28px;border-radius:7px;margin-right:9px}
 .odot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--hp);box-shadow:0 0 7px var(--hp);margin-right:7px;vertical-align:middle}
 .recrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .lvbig{display:grid;justify-items:center;gap:2px;padding:10px 26px;border-radius:14px;background:linear-gradient(160deg,#fff3a6,#f2c230 45%,#c98a0b);color:#2a1a00;box-shadow:0 0 40px rgba(242,194,48,.55);animation:lvpop .6s cubic-bezier(.2,1.6,.4,1)}
@@ -1342,7 +1343,7 @@ function renderLB(){const P=progress();const mr=$('#myRec');
   const recs=LB.recs.filter(r=>(r.wins|0)+(r.losses|0)>0);
   if(!recs.length){pl.innerHTML='<p class="status">No fights recorded yet. Beat the CPU, win a tournament fight or an online match to get on the board.</p>'}
   else{const rows=recs.slice().sort((a,b)=>(b.wins|0)-(a.wins|0)||(b.kos|0)-(a.kos|0));
-    pl.innerHTML='<table><thead><tr><th>#</th><th class="nm">Player</th><th>Lv</th><th>Wins</th><th>Losses</th><th>KOs</th><th>Fastest KO</th><th>Belts</th></tr></thead><tbody>'+rows.map((r,i)=>`<tr class="${r.id===LB.uid?'me':''}"><td>${i+1}</td><td class="nm">${(r.id===LB.uid&&!$('#menu').hidden)||(window.__onlineUids&&window.__onlineUids.has(r.id))?'<i class="odot" title="Online now"></i>':''}${esc((typeof r.name==='string'&&cleanName(r.name))||LB.names[r.id]||(r.id===LB.uid?'You':'Player'))}</td><td>${lvInfo(r.xp|0).L}</td><td>${r.wins|0}</td><td>${r.losses|0}</td><td>${r.kos|0}</td><td>${fmtT(typeof r.fastKo==='number'?r.fastKo:null)}</td><td>${r.tourn|0}</td></tr>`).join('')+'</tbody></table>'}
+    pl.innerHTML='<table><thead><tr><th>#</th><th class="nm">Player</th><th>Lv</th><th>Wins</th><th>Losses</th><th>KOs</th><th>Fastest KO</th><th>Belts</th></tr></thead><tbody>'+rows.map((r,i)=>`<tr class="${r.id===LB.uid?'me':''}"><td>${i+1}</td><td class="nm">${favImg(r)}${(r.id===LB.uid&&!$('#menu').hidden)||(window.__onlineUids&&window.__onlineUids.has(r.id))?'<i class="odot" title="Online now"></i>':''}${esc((typeof r.name==='string'&&cleanName(r.name))||LB.names[r.id]||(r.id===LB.uid?'You':'Player'))}</td><td>${lvInfo(r.xp|0).L}</td><td>${r.wins|0}</td><td>${r.losses|0}</td><td>${r.kos|0}</td><td>${fmtT(typeof r.fastKo==='number'?r.fastKo:null)}</td><td>${r.tourn|0}</td></tr>`).join('')+'</tbody></table>'}
   const agg=SKINS.map(s=>({n:s.name,w:0,l:0,ko:0}));recs.forEach(r=>{const S=r.skins||{};agg.forEach(a=>{const x=S[a.n];if(x){a.w+=x.w|0;a.l+=x.l|0;a.ko+=x.ko|0}})});
   agg.sort((a,b)=>b.w-a.w||a.l-b.l);
   sk.innerHTML='<table><thead><tr><th class="nm">Skin</th><th>Wins</th><th>Win %</th><th>KOs</th></tr></thead><tbody>'+agg.map(a=>`<tr><td class="nm">${esc(a.n)}</td><td>${a.w}</td><td>${a.w+a.l?Math.round(a.w/(a.w+a.l)*100)+'%':'—'}</td><td>${a.ko}</td></tr>`).join('')+'</tbody></table>';
@@ -1850,6 +1851,8 @@ $('#pwForm').addEventListener('submit',async e=>{e.preventDefault();const msg=$(
   finally{$('#pwGo').disabled=false}});
 
 accountsBoot();requestAnimationFrame(frame);
+function favSkin(r){const S=r&&r.skins;if(!S||typeof S!=='object')return null;let best=null,n=0;for(const k in S){const v=S[k]||{};const c=(v.w|0)+(v.l|0);if(c>n){n=c;best=k}}return best?SKINS.find(s=>s.name===best)||null:null}
+function favImg(r){const s=favSkin(r);if(!s||!s.img)return '';return `<span class="pf-face lbface" style="background-image:url('${s.img}');background-position:center ${s.bodyPic?'12%':'30%'}" title="Most used: ${esc(s.name)}"></span>`}
 window.__renderLB=()=>renderLB();window.__putHat=putHat;window.__lv=lvInfo;window.__rr={QUAL,game,SKINS,startFight,stepFight,aiThinkT:(a,m,o,d)=>aiThink(a,m,o,d)};
 })();
 </script>
